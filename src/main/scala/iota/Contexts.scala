@@ -3,21 +3,20 @@ package iota
 import android.content.{Context => AndroidContext}
 import scala.reflect.macros.{Context => MacroContext}
 
-import language.experimental.macros
-
 /**
  * @author pfnguyen
  */
-object Contexts {
-  implicit def materializeContext: AndroidContext = macro materializeContextImpl
-
+private[iota] trait Contexts {
+  /** pull a context out of "thin air", checks for Activity, Fragment and WithContext */
+  implicit def materializeContext: AndroidContext = macro ContextMacro.materializeContextImpl
+}
+private[iota] object ContextMacro {
   private[this] val TYPES =
     "android.app.Context" ::
-    "android.app.Fragment" ::
-    "android.support.v4.app.Fragment" ::
-    "iota.WithContext" ::
-    Nil
-
+      "android.app.Fragment" ::
+      "android.support.v4.app.Fragment" ::
+      "iota.WithContext" ::
+      Nil
   def materializeContextImpl(c: MacroContext): c.Expr[AndroidContext] = {
     import c.universe._
     val supportFragment = util.Try(rootMirror.staticClass("android.support.v4.app.Fragment")).toOption
@@ -54,6 +53,11 @@ object Contexts {
 
 }
 
+/**
+  * When a `android.content.Context` can't be found automatically using
+  * the implicits in `iota._` or `iota.std.Contexts._` implement this trait
+  * to help the implicit out
+  */
 trait WithContext {
   def getContext: AndroidContext
 }

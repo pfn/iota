@@ -1,9 +1,8 @@
 package iota
 
 /**
- * @author pfnguyen
+ * from scalamacros/macrology201/part1/macros/src/main/scala/Internal210.scala
  */
-
 // defines stubs for stuff that's missing in Scala 2.10
 object Compat210 {
   object blackbox { // scala.reflect.macros.blackbox package
@@ -17,7 +16,7 @@ import Compat210._
 
 // unifies scala.reflect.macros.runtime.Context (Scala 2.10)
 // and scala.reflect.macros.contexts.Context (Scala 2.11)
-object Power {
+private[iota] object Power {
   import scala.reflect.macros._
   object DummyScope
   {
@@ -31,7 +30,7 @@ import Power._
 
 // a cake slice that can be mixed into improvised macro bundles
 // to transparently bring new Scala 2.11 features to Scala 2.10
-trait Internal210 { self =>
+private[iota] trait Internal210 { self =>
   import scala.reflect.macros._
   import blackbox.Context
 
@@ -102,53 +101,4 @@ trait Internal210 { self =>
       sym.setTypeSignature(info)
     }
   }
-}
-
-package macroutil {
-
-import language.experimental.macros
-
-case class OrigOwnerAttachment(sym: Any)
-
-object Splicer {
-
-  import blackbox.Context
-
-  def impl[A](c: Context)(expr: c.Expr[A]): c.Expr[A] = {
-    val helper = new Splicer[c.type](c)
-    c.Expr[A](helper.changeOwner(expr.tree))
-  }
-
-  def changeOwner[A](expr: A): A = macro impl[A]
-}
-
-class Splicer[C <: reflect.macros.Context with Singleton](val c: C) extends Internal210 {
-  /** Safely splice the tree `t` into the enclosing lexical context in which it will
-    * be type checked. Rather than directly include `t` in the result, a layer of
-    * indirection is used: a call to the macro `changeOwner`.
-    *
-    * This macro is provied with the symbol of the current enclosing context
-    * (`c.enclosingOwner`), and the tree `t`.
-    *
-    * When it is typechecked, it will have access to another macro context with
-    * a new enclosing owner. This is substituted from the old owner.
-    *
-    * This avoids the tedium of manually creating symbols for synthetic enclosing
-    * owners when splicing macro arguments. And it avoids the bugs that still plaugue
-    * `untypecheck` (e.g. https://issues.scala-lang.org/browse/SI-8500)
-    *
-    * This approach only works in cases when you are splicing the arguments into leaf
-    * position in the synthetic tree. If you need to splice typed trees *above* untyped
-    * trees, it will fail because the typecheck stops descending when it finds a typed
-    * tree.
-    */
-
-  def changeOwner(tree: c.Tree): c.Tree = {
-    import c.universe._
-    val origOwner = tree.attachments.get[OrigOwnerAttachment].map(_.sym).fold(c.weakTypeOf[Nothing].typeSymbol)(_.asInstanceOf[Symbol])
-    c.internal.changeOwner(tree, origOwner, c.internal.enclosingOwner)
-  }
-
-}
-
 }

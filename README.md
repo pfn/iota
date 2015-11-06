@@ -26,7 +26,7 @@ All compositions are functions, no special classes.
 * `Views._` - has `w[View]`, `l[View]` and `c[View]` functions, `w` and `l`
   behave like in macroid, `w` for creating widgets, and `l` for creating
   ViewGroups with children. `c` is a helper function for providing the ViewGroup
-  type for LayoutParams creation when not inside of `IO[_ <: ViewGroup].apply()``.
+  type for LayoutParams creation when not inside of `IO[_ <: ViewGroup].apply()`.
 * `Contexts._` - implicit materializer for `android.content.Context` depending
   on what class one is in (`Activity`, `Fragment`, `WithContext`, etc)
 * `Configurations._` - has functions for detecting the current configuration:

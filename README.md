@@ -68,9 +68,9 @@ class MyActivity extends Activity {
 
   val layout = l[LinearLayout](
     w[Button] >>= text("Click Me") >>= hook0.onClick(IO {
-      Toast.makeText(this, "The button was clicked", Toast.LENGTH_SHORT).show(),
+      Toast.makeText(this, "The button was clicked", Toast.LENGTH_SHORT).show()
+    }) >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f),
     w[Button] >>= button2Adjustments
-    }) >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f)
   ) >>= kestrel (_.setOrientation(LinearLayout.VERTICAL))
 
   override def onCreate(b: Bundle) {

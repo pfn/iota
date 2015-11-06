@@ -24,10 +24,11 @@ trait Views {
   class cHelper[A <: ViewGroup] {
     def apply[B](body: B): B = macro ViewMacros.cw[A,B]
   }
+  private val chelper = new cHelper[ViewGroup]
   /** a type-hint is required when using `lp` or `lpK` outside of `IO[ViewGroup].apply(IO[View]*)`,
     * use `c[ViewGroup](B) => B` to provide `B` with the the type hint required to use `lp` and `lpK`
     */
-  def c[A <: ViewGroup] = new cHelper[A]
+  def c[A <: ViewGroup] = chelper.asInstanceOf[cHelper[A]] // prevent additional allocations
 }
 
 private[iota] object ViewMacros {

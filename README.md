@@ -27,7 +27,7 @@ All compositions are functions, no special classes.
   behave like in macroid, `w` for creating widgets, and `l` for creating
   ViewGroups with children. `c` is a helper function for providing the ViewGroup
   type for LayoutParams creation when not inside of `IO[_ <: ViewGroup].apply()``.
-* `Contexts._` - implicit materializes for `android.content.Context` depending
+* `Contexts._` - implicit materializer for `android.content.Context` depending
   on what class one is in (`Activity`, `Fragment`, `WithContext`, etc)
 * `Configurations._` - has functions for detecting the current configuration:
   `sw(smallest-width)`, `v(version)`, `landscape` and `portrait`
@@ -55,6 +55,8 @@ import android.view._
 import android.widget._
 
 class MyActivity extends Activity {
+  // c[LinearLayout] is necessary to hint to `lpK` that LinearLayout.LayoutParams
+  // need to be created.
   val button2Adjustments: Kestrel[Button] = c[LinearLayout](
     text("Click Me 2") >=> hook.onClick((v: View) => IO {
       Toast.makeText(this, s"button ${v.getId} was clicked", Toast.LENGTH_SHORT).show()
@@ -79,10 +81,9 @@ class MyActivity extends Activity {
 
 #### Motivations for creation
 
-As a long time user of `macroid` I enjoyed what it brought to the layout dsl,
-but do not like how certain features are enabled, mixing in `Contexts[A]`,
-super verbose `lp` layout parameter creation, and operators that don't
+As a long time user of `macroid` I enjoy what it brought to layout dsl, but do
+not like how certain features work: mixing in `Contexts[A]`, super verbose `lp`
+layout parameter creation, failures in type inference, and operators that don't
 necessarily make sense (i.e. `<~`, et al). The design goal here is to be as pure
-as possible while becoming more terse and using an existing vocabulary:
-kestrel (K-combinators), `>>=` (flatMap, bind), `>=>` (kleisli composition),
-etc.
+as possible while remaining terse and using an existing vocabulary: `kestrel`
+(K-combinator), `>>=` (flatMap, bind), `>=>` (kleisli composition), etc.

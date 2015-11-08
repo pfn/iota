@@ -44,6 +44,22 @@ class AnActivity extends Activity {
   c[FrameLayout](
     w[TextView] >>= lp(MATCH_PARENT, MATCH_PARENT)
   )
+
+  w[TextView] >>= id(Id.foobarbaz)
+  w[ImageView] >>= id(Id.foobarbaz)
+
+  val error = 1
+
+  w[TextView] >>= id(android.R.id.background)
+
+//  w[TextView] >>= IdMacros.tId(error)
+
+  systemService[android.app.NotificationManager].notify(1, null)
+  def f(): Unit = {
+    val f1 = 2
+    w[TextView] >>= id(f1)
+    w[ImageView] >>= id(f1)
+  }
 }
 
 class Frag extends android.app.Fragment {
@@ -73,4 +89,11 @@ object Main extends App {
 
   println("Another line")
   println(x.perform())
+
+//  println(IdMacros.materializeIdType)
+//  val s = IdMacros.g(1)
+//  println("type of s: " + s.getClass)
+  println(Id.foo)
+  println(Id.foobar)
+  println(Id.foo)
 }

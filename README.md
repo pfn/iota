@@ -83,7 +83,8 @@ class MyActivity extends Activity {
 
 As a long time user of `macroid` I enjoy what it brought to layout dsl, but do
 not like how certain features work: mixing in `Contexts[A]`, super verbose `lp`
-layout parameter creation, failures in type inference, and operators that don't
-necessarily make sense (i.e. `<~`, et al). The design goal here is to be as pure
-as possible while remaining terse and using an existing vocabulary: `kestrel`
-(K-combinator), `>>=` (flatMap, bind), `>=>` (kleisli composition), etc.
+layout parameter creation, failures in type inference, lack of type-safety in
+ID lookups, and operators that don't necessarily make sense (i.e. `<~`, et al).
+The design goal here is to be as pure as possible while remaining terse and
+using an existing vocabulary: `kestrel` (K-combinator), `>>=` (flatMap, bind),
+`>=>` (kleisli composition), etc.

@@ -1,22 +1,37 @@
 package iota
 
 import android.content.{Context => AndroidContext}
+import android.net.nsd.NsdManager
+import android.telephony.TelephonyManager
 import scala.reflect.macros.{Context => MacroContext}
 
 /**
  * @author pfnguyen
  */
+case class SystemService[T](name: String) extends AnyVal
 private[iota] trait Contexts {
   /** pull a context out of "thin air", checks for Activity, Fragment and WithContext */
   implicit def materializeContext: AndroidContext = macro ContextMacro.materializeContextImpl
+
+  implicit val `nsd system service` =
+    SystemService[NsdManager](AndroidContext.NSD_SERVICE)
+  implicit val `telephony system service` =
+    SystemService[TelephonyManager](AndroidContext.TELEPHONY_SERVICE)
+
+  implicit def materializeSystemService[T]: SystemService[T] = macro ContextMacro.materializeSystemServiceImpl[T]
+  /** type-safe retrieval of system service objects.
+    * e.g. `systemService[NotificationManager]`
+    */
+  @inline def systemService[T](implicit s: SystemService[T], context: AndroidContext): T =
+    context.getSystemService(s.name).asInstanceOf[T]
 }
 private[iota] object ContextMacro {
   private[this] val TYPES =
     "android.app.Context" ::
-      "android.app.Fragment" ::
-      "android.support.v4.app.Fragment" ::
-      "iota.WithContext" ::
-      Nil
+    "android.app.Fragment" ::
+    "android.support.v4.app.Fragment" ::
+    "iota.WithContext" ::
+    Nil
   def materializeContextImpl(c: MacroContext): c.Expr[AndroidContext] = {
     import c.universe._
     val supportFragment = util.Try(rootMirror.staticClass("android.support.v4.app.Fragment")).toOption
@@ -51,6 +66,29 @@ private[iota] object ContextMacro {
     })
   }
 
+  private[this] lazy val SERVICE_CONSTANTS = {
+    val fields = classOf[AndroidContext].getDeclaredFields filter {
+      _.getName endsWith "_SERVICE"
+    }
+    fields map { f =>
+      val v = f.get(null).toString
+      v.replaceAll("_", "") -> v
+    } toSeq
+  }
+  def materializeSystemServiceImpl[T: c.WeakTypeTag](c: MacroContext): c.Expr[SystemService[T]] = {
+    import c.universe._
+
+    val tpe = weakTypeOf[T]
+    val candidates = SERVICE_CONSTANTS filter (tpe.toString.toLowerCase contains _._1)
+    val service = ("" /: candidates) { (a, b) =>
+      if (a.length > b._2.length) a else b._2
+    }
+
+    c.Expr[SystemService[T]](Apply(TypeApply(
+      Select(reify(iota.SystemService).tree, newTermName("apply")),
+      List(TypeTree(tpe))
+    ), List(Literal(Constant(service)))))
+  }
 }
 
 /**

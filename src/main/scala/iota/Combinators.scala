@@ -21,7 +21,7 @@ private[iota] trait Combinators {
   private[iota] def noopK[A]: Kestrel[A] = kestrel(_ => ())
 }
 private[iota] trait ViewCombinators {
-  def id[A <: View](id: Int): Kestrel[A] = kestrel(_.setId(id))
+  def id[A <: View](id: Int): Kestrel[A] = macro IdMacros.tIdImpl[A]
 
   def visibility[A <: View](visibility: Int): Kestrel[A] =
     kestrel(_.setVisibility(visibility))

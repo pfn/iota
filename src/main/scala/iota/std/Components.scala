@@ -17,7 +17,17 @@ object LayoutCombinators extends LayoutCombinators
 object TextCombinators extends TextCombinators
 object ViewCombinators extends ViewCombinators
 object Contexts extends Contexts
-object Views extends Views
+object Views extends Views with IdMacros {
+  implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {
+    def findView[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A]): A = {
+      val v = vg.findViewById(id).asInstanceOf[A]
+      if (v == null) throw new NullPointerException(s"view $id not found")
+      v
+    }
+    def findViewOption[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A]): Option[A] =
+      Option(vg.findViewById(id).asInstanceOf[A])
+  }
+}
 object Ternary extends TernaryOps {
   implicit class WithTernaryOp(val b: Boolean) extends AnyVal {
     /** ternary expression creator */

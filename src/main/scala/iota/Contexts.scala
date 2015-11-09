@@ -1,5 +1,6 @@
 package iota
 
+import android.app.Activity
 import android.content.{Context => AndroidContext}
 import android.net.nsd.NsdManager
 import android.telephony.TelephonyManager
@@ -12,6 +13,19 @@ case class SystemService[T](name: String) extends AnyVal
 private[iota] trait Contexts {
   /** pull a context out of "thin air", checks for Activity, Fragment and WithContext */
   implicit def materializeContext: AndroidContext = macro ContextMacro.materializeContextImpl
+
+  implicit def materializeActivity: Activity = macro ContextMacro.materializeActivityImpl
+
+  /** find a strongly-typed view */
+  def findView[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A], activity: Activity): A = {
+    val v = activity.findViewById(id).asInstanceOf[A]
+    if (v == null) throw new NullPointerException(s"view $id not found")
+    v
+  }
+
+  /** find a strongly-typed view that may not be present */
+  def findViewOption[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A], activity: Activity): Option[A] =
+    Option(activity.findViewById(id).asInstanceOf[A])
 
   implicit val `nsd system service` =
     SystemService[NsdManager](AndroidContext.NSD_SERVICE)
@@ -44,8 +58,42 @@ private[iota] object ContextMacro {
     def expandTree(tpe: Type): Option[c.Tree] = {
       if (tpe <:< c.weakTypeOf[AndroidContext]) {
         Option(This(tpe.typeSymbol))
-      } else if (tpe <:< c.weakTypeOf[WithContext]) {
-        Option(Select(This(tpe.typeSymbol), newTermName("getContext")))
+      } else if (tpe <:< c.weakTypeOf[HasContext]) {
+        Option(Select(This(tpe.typeSymbol), newTermName("context")))
+      } else if (tpe <:< c.weakTypeOf[android.app.Fragment]) {
+        Option(Apply(Select(This(tpe.typeSymbol), newTermName("getActivity")), Nil))
+      } else if (supportFragment.exists(tpe <:< _.toType)) {
+        Option(Apply(Select(This(tpe.typeSymbol), newTermName("getActivity")), Nil))
+      } else {
+        None
+      }
+    }
+
+    def error = c.abort(c.enclosingPosition,
+      s"$classType does not extend any of:\n    ${TYPES mkString "\n    "}")
+
+    c.Expr(expandTree(classType).getOrElse {
+      val paths = dfs(c.enclosingUnit.body, c.enclosingPosition, Nil)
+      paths.find(_.symbol.asType.toType <:< c.weakTypeOf[AndroidContext]).fold(
+        error
+      )(t => expandTree(t.symbol.asType.toType).getOrElse (error))
+    })
+  }
+
+  def materializeActivityImpl(c: MacroContext): c.Expr[Activity] = {
+    import c.universe._
+    val supportFragment = util.Try(rootMirror.staticClass("android.support.v4.app.Fragment")).toOption
+    val classType = c.enclosingClass.symbol.asType.toType
+
+    def dfs(body: c.Tree, pos: c.Position, path: List[c.Tree]): List[c.Tree] =
+      if (body.pos == pos) path.collect { case a@ClassDef(_,_,_,_) => a }
+      else body.children.flatMap { child => dfs(child, pos, body :: path) }
+
+    def expandTree(tpe: Type): Option[c.Tree] = {
+      if (tpe <:< c.weakTypeOf[Activity]) {
+        Option(This(tpe.typeSymbol))
+      } else if (tpe <:< c.weakTypeOf[HasActivity]) {
+        Option(Select(This(tpe.typeSymbol), newTermName("activity")))
       } else if (tpe <:< c.weakTypeOf[android.app.Fragment]) {
         Option(Apply(Select(This(tpe.typeSymbol), newTermName("getActivity")), Nil))
       } else if (supportFragment.exists(tpe <:< _.toType)) {
@@ -91,11 +139,18 @@ private[iota] object ContextMacro {
   }
 }
 
-/**
-  * When a `android.content.Context` can't be found automatically using
+/** When a `android.content.Context` can't be found automatically using
   * the implicits in `iota._` or `iota.std.Contexts._` implement this trait
   * to help the implicit out
   */
-trait WithContext {
-  def getContext: AndroidContext
+trait HasContext {
+  def context: AndroidContext
+}
+
+/** When an `android.app.Activity` can't be found automatically using
+  * the implicits in `iota._` or `iota.std.Contexts._` implement this trait
+  * to help the implicit out
+  */
+trait HasActivity {
+  def activity: Activity
 }

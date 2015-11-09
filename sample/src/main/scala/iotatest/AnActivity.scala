@@ -45,6 +45,7 @@ class AnActivity extends Activity {
     w[TextView] >>= lp(MATCH_PARENT, MATCH_PARENT)
   )
 
+  findView(Id.iamnotsetyet)
   w[TextView] >>= id(Id.foobarbaz)
   w[ImageView] >>= id(Id.foobarbaz)
 
@@ -52,13 +53,20 @@ class AnActivity extends Activity {
 
   w[TextView] >>= id(android.R.id.background)
 
-//  w[TextView] >>= IdMacros.tId(error)
+  findView(android.R.id.background)
+  w[TextView] >>= id(error)
 
   systemService[android.app.NotificationManager].notify(1, null)
   def f(): Unit = {
     val f1 = 2
     w[TextView] >>= id(f1)
+
+    findView(f1)
     w[ImageView] >>= id(f1)
+    w[ImageView] >>= id(3)
+    w[ImageButton] >>= id(3)
+
+    (findView(3) : ImageView).setImageResource(0)
   }
 }
 
@@ -75,8 +83,8 @@ class Foobar extends Activity {
 
 class Barbar extends Foobar {
 }
-class NotFramework extends WithContext {
-  def getContext = null: android.content.Context
+class NotFramework extends HasContext {
+  def context = null: android.content.Context
   materializeContext.getSystemService(android.content.Context.NOTIFICATION_SERVICE)
 }
 //class NotFramework2 {

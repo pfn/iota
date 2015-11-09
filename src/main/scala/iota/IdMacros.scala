@@ -7,24 +7,41 @@ import android.view.View
 import scala.reflect.ClassTag
 import scala.reflect.macros.Context
 
+case class ViewIdType[+A : ClassTag]()
 /**
   * @author pfnguyen
   */
+trait IdMacros {
+  implicit def materializeIdType: ViewIdType[Any] = macro IdMacros.matIdType
+}
 private[iota] object IdMacros {
-
-  case class IdType[+A : ClassTag]()
-
-  implicit def materializeIdType: IdMacros.IdType[Any] = macro matIdType
-  def matIdType(c: Context): c.Expr[IdMacros.IdType[Any]] = {
+  def matIdType(c: Context): c.Expr[ViewIdType[Any]] = {
+    import FileUtil._
     import c.universe._
-    println(c.enclosingImplicits)
-    val s = rootMirror.staticClass("java.lang.String")
-    val tpe = s.asType.toType
-    c.Expr[IdMacros.IdType[Any]](Apply(
+    val idInfo: Either[String, Int] = c.enclosingImplicits.head._2.collect {
+      case Apply(_, x :: _) => x
+    }.head match {
+      case Literal(Constant(n: Int)) => Right(n)
+      case x => Left(x.symbol.fullName)
+    }
+
+    val base = target(c.enclosingUnit.source.file.file)
+    val strFile = file(base, STR_TYPE_FILE)
+    val intFile = file(base, INT_TYPE_FILE)
+
+    val (strs, ints) = loadMappings(strFile, intFile)
+    val mapped = idInfo.left.map(strs.get).right.map(ints.get).fold(identity,identity) getOrElse {
+      c.warning(c.enclosingPosition,
+        "findView used before id(_), cannot determine type, falling back to `android.view.View`")
+      "android.view.View"
+    }
+
+    val tpe = rootMirror.staticClass(mapped).asType.toType
+    c.Expr[ViewIdType[Any]](Apply(
       Apply(
         TypeApply(
           Select(
-            reify(IdMacros.IdType).tree, newTermName("apply")
+            reify(ViewIdType).tree, newTermName("apply")
           ),
           List(TypeTree(tpe))
         ),
@@ -33,7 +50,7 @@ private[iota] object IdMacros {
       List(Select(reify(scala.Predef).tree, newTermName("implicitly")))
     ))
   }
-  def g[A](id: Int)(implicit ev: IdType[A]) = {
+  def g[A](id: Int)(implicit ev: ViewIdType[A]) = {
     "foo".asInstanceOf[A]
   }
 

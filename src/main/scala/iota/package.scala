@@ -7,6 +7,7 @@ import blackbox.Context
 package iota {
 private[iota] trait AllComponents
   extends Combinators
+  with IdMacros
   with Views
   with TernaryOps
   with Contexts
@@ -55,5 +56,15 @@ package object iota extends AllComponents {
     def >=>[C](g: B => IO[C]): A => IO[C] = { a: A =>
       f(a) >>= g
     }
+  }
+
+  implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {
+    def findView[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A]): A = {
+      val v = vg.findViewById(id).asInstanceOf[A]
+      if (v == null) throw new NullPointerException(s"view $id not found")
+      v
+    }
+    def findViewOption[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A]): Option[A] =
+      Option(vg.findViewById(id).asInstanceOf[A])
   }
 }

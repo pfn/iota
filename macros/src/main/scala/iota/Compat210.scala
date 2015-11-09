@@ -5,6 +5,9 @@ package iota
  */
 // defines stubs for stuff that's missing in Scala 2.10
 object Compat210 {
+  object whitebox {
+    type Context = scala.reflect.macros.Context
+  }
   object blackbox { // scala.reflect.macros.blackbox package
   type Context = scala.reflect.macros.Context
   }

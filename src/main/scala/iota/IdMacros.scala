@@ -12,17 +12,20 @@ case class ViewIdType[+A : ClassTag]()
   * @author pfnguyen
   */
 trait IdMacros {
-  implicit def materializeIdType: ViewIdType[Any] = macro IdMacros.matIdType
+  implicit def materializeIdType[A <: View]: ViewIdType[A] = macro IdMacros.matIdType[A]
 }
 private[iota] object IdMacros {
-  def matIdType(c: Context): c.Expr[ViewIdType[Any]] = {
+  def matIdType[A <: View](c: Context): c.Expr[ViewIdType[A]] = {
     import FileUtil._
     import c.universe._
-    val idInfo: Either[String, Int] = c.enclosingImplicits.head._2.collect {
-      case Apply(_, x :: _) => x
+    val idInfo: Either[String, Int] = (c.enclosingImplicits.head match {
+      case p: Product if p.productArity == 2 => p.productElement(1).asInstanceOf[c.Tree]
+      case p: Product if p.productArity == 4 => p.productElement(3).asInstanceOf[c.Tree]
+    }).collect {
+      case Apply(_, y :: _) => y
     }.head match {
       case Literal(Constant(n: Int)) => Right(n)
-      case x => Left(x.symbol.fullName)
+      case t => Left(t.symbol.fullName)
     }
 
     val base = target(c.enclosingUnit.source.file.file)
@@ -37,7 +40,7 @@ private[iota] object IdMacros {
     }
 
     val tpe = rootMirror.staticClass(mapped).asType.toType
-    c.Expr[ViewIdType[Any]](Apply(
+    c.Expr[ViewIdType[A]](Apply(
       Apply(
         TypeApply(
           Select(

@@ -9,12 +9,14 @@ import scala.reflect.macros.Context
   * @author pfnguyen
   */
 object Id extends Dynamic {
+  // identifiers must be consistent for use with id() and findView() --
+  // convert Id.x into a literal value that does not change between builds
   def selectDynamic(name: String): Int = macro loadLiteralId
 
   private[this] val lock = new Object
   // application ID start at 0x7f and above, system ids start at 0x01
   // lets arbitrarily take 0x7e
-  // TODO this needs to be made more unique, by library...
+  // TODO this needs to be made configurable/unique by library...
   private[this] val BASE_ID = 0x7e000000
   private[this] var ids = Map.empty[String,Int]
   private[this] var mapTime = 0l

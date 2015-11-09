@@ -98,9 +98,6 @@ object Main extends App {
   println("Another line")
   println(x.perform())
 
-//  println(IdMacros.materializeIdType)
-//  val s = IdMacros.g(1)
-//  println("type of s: " + s.getClass)
   println(Id.foo)
   println(Id.foobar)
   println(Id.foo)

@@ -50,9 +50,6 @@ private[iota] object IdMacros {
       List(Select(reify(scala.Predef).tree, newTermName("implicitly")))
     ))
   }
-  def g[A](id: Int)(implicit ev: ViewIdType[A]) = {
-    "foo".asInstanceOf[A]
-  }
 
   private[this] val INT_TYPE_FILE = "iota-int-ids.txt"
   private[this] val STR_TYPE_FILE = "iota-str-ids.txt"

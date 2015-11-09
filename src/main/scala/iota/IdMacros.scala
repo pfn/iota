@@ -20,7 +20,6 @@ private[iota] object IdMacros {
     import c.universe._
     val idInfo: Either[String, Int] = (c.enclosingImplicits.head match {
       case p: Product if p.productArity == 2 => p.productElement(1).asInstanceOf[c.Tree]
-      case p: Product2[_, _] => p.productElement(1).asInstanceOf[c.Tree]
       case p: Product if p.productArity == 4 => p.productElement(3).asInstanceOf[c.Tree]
     }).collect {
       case Apply(_, y :: _) => y

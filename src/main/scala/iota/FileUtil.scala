@@ -36,7 +36,7 @@ private[iota] object FileUtil {
     } yield fst).fold(cwd) { fst =>
       // TODO handle discovering other names such as "bin", "build", "output", etc.
       if ("src" == fst)
-        file(cwd, "target")
+        file(file(cwd, "target"), "iota")
       else
         file(file(file(cwd, fst), "target"), "iota")
     }

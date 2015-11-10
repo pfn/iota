@@ -80,10 +80,10 @@ class MyActivity extends Activity {
       })
   ) >>= kestrel (_.setOrientation(LinearLayout.VERTICAL))
 
-  // most IDEs can't tell that button2 is a Button, they will usually see that
-  // this is a View; a type ascription can be used to hint
-  // TYPE ASCRIPTION IS BROKEN AND WILL CAUSE SCALAC TO CRASH: DO NOT DO THIS
+  // many IDEs can't tell that button2 is a Button, they will often think that
+  // this is a View; a type ascription can be used to hint:
   // `lazy val button2: Button = findView(Id.button2)`
+  // the type ascribed must be correct or else scalac will crash
   lazy val button2 = findView(Id.button2) // is typed as android.widget.Button
 
   override def onCreate(b: Bundle) {

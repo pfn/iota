@@ -18,6 +18,7 @@ private[iota] object IdMacros {
   def matIdType(c: Context): c.Expr[ViewIdType[Any]] = {
     import FileUtil._
     import c.universe._
+    // check `Product` to be source compatible with scala 2.10 and 2.11
     val idInfo: Either[String, Int] = (c.enclosingImplicits.head match {
       case p: Product if p.productArity == 2 => p.productElement(1).asInstanceOf[c.Tree]
       case p: Product if p.productArity == 4 => p.productElement(3).asInstanceOf[c.Tree]
@@ -43,9 +44,7 @@ private[iota] object IdMacros {
     c.Expr[ViewIdType[Any]](Apply(
       Apply(
         TypeApply(
-          Select(
-            reify(ViewIdType).tree, newTermName("apply")
-          ),
+          Select(reify(ViewIdType).tree, newTermName("apply")),
           List(TypeTree(tpe))
         ),
         List()
@@ -81,6 +80,8 @@ private[iota] object IdMacros {
       item match {
         case Some(tpe) =>
           if (tpe != tpeInfo) {
+            // reassigning types will cause the mapping file to grow without bound
+            // when building incrementally  :-( fix how?
             val tpe1 = rootMirror.staticClass(tpe).baseClasses.collect { case c: ClassSymbol if !c.isTrait => c }.reverse
             val tpe2 = rootMirror.staticClass(tpeInfo).baseClasses.collect { case c: ClassSymbol if !c.isTrait => c }.reverse
             val common = (tpe1 zip tpe2).takeWhile(t => t._1 == t._2).lastOption map (_._1.fullName) getOrElse "android.view.View"

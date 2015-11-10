@@ -1,5 +1,6 @@
 package iota
 
+import scala.reflect.internal.TreeGen
 import scala.reflect.macros.Context
 
 /**
@@ -111,14 +112,30 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
               ), newListenerMethod(sym, handler, handleArgs)
             ) ++ newListenerOverrides(overrides)
           )
+
         )
       ),
       Apply(Select(New(Ident(newTypeName(listenerTypeName))), nme.CONSTRUCTOR), List())
     )
   }
 
+  // semi-copied from TreeGen
+  def mkZero(tp: Type): Tree = Literal(mkConstantZero(tp))
+  def mkConstantZero(tp: Type): Constant =
+    if (tp =:= typeOf[Unit])         Constant(())
+    else if (tp =:= typeOf[Boolean]) Constant(false)
+    else if (tp =:= typeOf[Float])   Constant(0.0f)
+    else if (tp =:= typeOf[Float])   Constant(0.0d)
+    else if (tp =:= typeOf[Byte])    Constant(0.toByte)
+    else if (tp =:= typeOf[Short])   Constant(0.toShort)
+    else if (tp =:= typeOf[Int])     Constant(0)
+    else if (tp =:= typeOf[Long])    Constant(0L)
+    else if (tp =:= typeOf[Char])    Constant(0.toChar)
+    else                             Constant(null)
+
   def newListenerOverrides(overrides: List[MethodSymbol]): List[c.Tree] = {
     overrides map { sym =>
+      val ret = mkZero(sym.returnType)
       val params = sym.paramss.head map { p =>
         ValDef(Modifiers(Flag.PARAM),
           newTermName(c.fresh()),
@@ -130,7 +147,7 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
         List(),
         List(params),
         TypeTree(),
-        c.literalFalse.tree
+        ret
       )
     }
   }

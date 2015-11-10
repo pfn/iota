@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.{Context => AndroidContext}
 import android.net.nsd.NsdManager
 import android.telephony.TelephonyManager
+import scala.reflect.ClassTag
 import scala.reflect.macros.{Context => MacroContext}
 
 /**
@@ -17,14 +18,14 @@ private[iota] trait Contexts {
   implicit def materializeActivity: Activity = macro ContextMacro.materializeActivityImpl
 
   /** find a strongly-typed view */
-  def findView[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A], activity: Activity): A = {
+  def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): A = {
     val v = activity.findViewById(id).asInstanceOf[A]
     if (v == null) throw new NullPointerException(s"view $id not found")
     v
   }
 
   /** find a strongly-typed view that may not be present */
-  def findViewOption[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A], activity: Activity): Option[A] =
+  def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): Option[A] =
     Option(activity.findViewById(id).asInstanceOf[A])
 
   implicit val `nsd system service` =

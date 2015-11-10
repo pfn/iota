@@ -1,6 +1,8 @@
 import iota.Compat210._
 import blackbox.Context
 
+import scala.reflect.ClassTag
+
 /**
  * @author pfnguyen
  */
@@ -59,12 +61,12 @@ package object iota extends AllComponents {
   }
 
   implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {
-    def findView[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A]): A = {
+    def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int): A = {
       val v = vg.findViewById(id).asInstanceOf[A]
       if (v == null) throw new NullPointerException(s"view $id not found")
       v
     }
-    def findViewOption[A <: android.view.View](id: Int)(implicit evidence: ViewIdType[A]): Option[A] =
+    def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int): Option[A] =
       Option(vg.findViewById(id).asInstanceOf[A])
   }
 }

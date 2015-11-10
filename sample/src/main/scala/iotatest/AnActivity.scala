@@ -34,7 +34,8 @@ class AnActivity extends Activity {
     IO(new TextView(this)) >>= condK(sw(600.dp) ? lp(WRAP_CONTENT, WRAP_CONTENT))
   )
 
-  val tv = firstlayout.perform().findView(Id.firsttext)
+  val tv: TextView = firstlayout.perform().findView(Id.firsttext)
+  val tv1: TextView = findView(Id.firsttext)
 
   IO(new FrameLayout(this))(IO(new View(this)))
   IO(new View(this)) >>= id(1) >>= hook0.onClick(IO {
@@ -53,7 +54,12 @@ class AnActivity extends Activity {
   )
 
   findView(Id.iamnotsetyet)
-  w[TextView] >>= id(Id.foobarbaz)
+  w[SearchView] >>= hookM.queryText.onQueryTextChange((text: String) => IO {
+    false
+  })
+  w[TextView] >>= id(Id.foobarbaz) >>= hookM.textChanged.onTextChanged((s: CharSequence, start: Int, before: Int, count: Int) => IO {
+    false
+  })
   w[ImageView] >>= id(Id.foobarbaz)
 
   val error = 1

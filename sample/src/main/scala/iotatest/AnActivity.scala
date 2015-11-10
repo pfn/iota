@@ -26,13 +26,16 @@ class AnActivity extends Activity {
 
   val fl = new FrameLayout(this)
   val weirdMatchP = 2
-  (IO(new FrameLayout(this)) >>= gone)(
-    IO(new TextView(this)) >>= lp(MATCH_PARENT, weirdMatchP) >>= kestrel { t => t.setText("HI") },
+  val firstlayout = (IO(new FrameLayout(this)) >>= gone)(
+    IO(new TextView(this)) >>= lp(MATCH_PARENT, weirdMatchP) >>= kestrel { t => t.setText("HI") } >>= id(Id.firsttext),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)((p: ViewGroup.MarginLayoutParams) => 9),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)(margins(all = 5.dp)),
     IO(new TextView(this)) >>= condK(sw(600.dp) ? lp(MATCH_PARENT, MATCH_PARENT) | lp(WRAP_CONTENT, WRAP_CONTENT)),
     IO(new TextView(this)) >>= condK(sw(600.dp) ? lp(WRAP_CONTENT, WRAP_CONTENT))
   )
+
+  val tv = firstlayout.perform().findView(Id.firsttext)
+
   IO(new FrameLayout(this))(IO(new View(this)))
   IO(new View(this)) >>= id(1) >>= hook0.onClick(IO {
     println("x")

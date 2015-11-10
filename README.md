@@ -81,7 +81,8 @@ class MyActivity extends Activity {
   ) >>= kestrel (_.setOrientation(LinearLayout.VERTICAL))
 
   // most IDEs can't tell that button2 is a Button, they will usually see that
-  // this is a View; a type ascription can be used to hint, e.g.
+  // this is a View; a type ascription can be used to hint
+  // TYPE ASCRIPTION IS BROKEN AND WILL CAUSE SCALAC TO CRASH: DO NOT DO THIS
   // `lazy val button2: Button = findView(Id.button2)`
   lazy val button2 = findView(Id.button2) // is typed as android.widget.Button
 

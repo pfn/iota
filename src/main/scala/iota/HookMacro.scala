@@ -85,9 +85,7 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
     val (setter, listener, on, toOverride) = callbackPartsFor(outer, Option(e))
 
     val anon = newListenerClass(listener, on, handler.tree, toOverride, true)
-    val x = c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
-    println(x)
-    x
+    c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
   }
 
   def newListenerClass(tpe: Type, sym: MethodSymbol, handler: Tree, overrides: List[MethodSymbol], handleArgs: Boolean = false) = {

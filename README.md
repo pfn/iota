@@ -4,7 +4,7 @@ A small, an iota, side-effect tracking library and layout DSL
 
 ## add to your build
 
-`libraryDependencies += "com.hanhuy.android" %% "iota" % "0.1"`
+`libraryDependencies += "com.hanhuy.android" %% "iota" % "0.2"`
 
 ## Usage
 
@@ -70,7 +70,14 @@ class MyActivity extends Activity {
     w[Button] >>= text("Click Me") >>= hook0.onClick(IO {
       Toast.makeText(this, "The button was clicked", Toast.LENGTH_SHORT).show()
     }) >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f),
-    w[Button] >>= button2Adjustments >>= id(Id.button2)
+    w[Button] >>= button2Adjustments >>= id(Id.button2),
+    w[ListView] >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f) >>=
+      hookM.scroll.onScrollStateChanged((list: AbsListView, state: Int) => IO {
+        // partially implemented listeners with direct method name overrides
+        // can also be used as `hookM0.scroll.onScrollStateChanged` if the input
+        // parameters can be ignored.
+        Toast.makeText(this, "Scroll state changed: " + state, Toast.LENGTH_SHORT).show()
+      })
   ) >>= kestrel (_.setOrientation(LinearLayout.VERTICAL))
 
   // most IDEs can't tell that button2 is a Button, they will usually see that

@@ -41,6 +41,10 @@ class AnActivity extends Activity {
     IO(true)
   } >>= hookM.onClick.onClick((v: View) => IO { v.setOnClickListener(null);  true })
 
+  w[ListView] >>= hookM.scroll.onScrollStateChanged((view: AbsListView, state: Int) => IO {
+    println("state")
+  })
+
   c[FrameLayout](
     w[TextView] >>= lp(MATCH_PARENT, MATCH_PARENT)
   )

@@ -28,7 +28,7 @@ name := "iota"
 
 organization := "com.hanhuy.android"
 
-version := "0.2-SNAPSHOT"
+version := "0.2"
 
 platformTarget := platform
 

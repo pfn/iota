@@ -18,26 +18,34 @@ private[iota] object IdMacros {
   def matIdType(c: Context): c.Expr[ViewIdType[Any]] = {
     import FileUtil._
     import c.universe._
-    // check `Product` to be source compatible with scala 2.10 and 2.11
-    val idInfo: Either[String, Int] = (c.enclosingImplicits.head match {
-      case p: Product if p.productArity == 2 => p.productElement(1).asInstanceOf[c.Tree]
-      case p: Product if p.productArity == 4 => p.productElement(3).asInstanceOf[c.Tree]
-    }).collect {
-      case Apply(_, y :: _) => y
-    }.head match {
-      case Literal(Constant(n: Int)) => Right(n)
-      case t => Left(t.symbol.fullName)
-    }
 
     val base = target(c.enclosingUnit.source.file.file)
     val strFile = file(base, STR_TYPE_FILE)
     val intFile = file(base, INT_TYPE_FILE)
 
     val (strs, ints) = loadMappings(strFile, intFile)
-    val mapped = idInfo.left.map(strs.get).right.map(ints.get).fold(identity,identity) getOrElse {
-      c.warning(c.enclosingPosition,
-        "findView used before id(_), cannot determine type, falling back to `android.view.View`")
+
+    // check `Product` to be source compatible with scala 2.10 and 2.11
+    val mapped = c.enclosingImplicits.headOption.fold {
+      c.warning(c.enclosingPosition, "materializeIdType is not being used properly for implicit resolution")
       "android.view.View"
+    } { impls =>
+      val tree = impls match {
+        case p: Product if p.productArity == 2 => p.productElement(1).asInstanceOf[c.Tree]
+        case p: Product if p.productArity == 4 => p.productElement(3).asInstanceOf[c.Tree]
+      }
+      val idInfo: Either[String,Int] = tree.collect {
+        case Apply(_, y :: _) => y
+      }.head match {
+        case Literal(Constant(n: Int)) => Right(n)
+        case t => Left(t.symbol.fullName)
+      }
+
+      idInfo.left.map(strs.get).right.map(ints.get).fold(identity,identity) getOrElse {
+        c.warning(c.enclosingPosition,
+          "findView used before id(_), cannot determine type, falling back to `android.view.View`")
+        "android.view.View"
+      }
     }
 
     val tpe = rootMirror.staticClass(mapped).asType.toType

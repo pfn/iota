@@ -34,8 +34,8 @@ private[iota] object IOViewGroupMacro {
           x.splice.foreach { iov =>
             val iota$generatedView = iov.perform()
             // ugly workaround for when views are recycled
-//            if (iota$generatedView.getParent != null)
-//              iota$generatedView.getParent.asInstanceOf[ViewGroup].removeView(iota$generatedView)
+            if (iota$generatedView.getParent != null)
+              iota$generatedView.getParent.asInstanceOf[ViewGroup].removeView(iota$generatedView)
             iota$generatedContainer$1.addView(iota$generatedView)
           }
           iota$generatedContainer$1
@@ -46,9 +46,12 @@ private[iota] object IOViewGroupMacro {
 
   class LpTransformer[C <: Context](val c: C) extends Internal210 {
     import c.universe._
-    def lpTypeOf(tpe: Type) = tpe.baseClasses.flatMap(base =>
-      util.Try(rootMirror.staticClass(base.asClass.fullName + ".LayoutParams")).toOption
-    ).headOption.getOrElse(
+    def lpTypeOf(tpe: Type) = tpe.baseClasses.flatMap { base =>
+      val clsname = base.asClass.fullName
+      val lpname = clsname + (if (clsname == "android.view.ViewGroup")
+        ".MarginLayoutParams" else ".LayoutParams")
+      util.Try(rootMirror.staticClass(lpname)).toOption
+    }.headOption.getOrElse(
       c.abort(c.enclosingPosition, tpe + " does not have a LayoutParams nested class")
     )
     def isInIota(id: Tree) = {

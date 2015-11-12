@@ -4,12 +4,17 @@ import android.app.Activity
 import android.content.{Context => AndroidContext}
 import android.net.nsd.NsdManager
 import android.telephony.TelephonyManager
+import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 import scala.reflect.macros.{Context => MacroContext}
 
 /**
  * @author pfnguyen
  */
+@implicitNotFound("Unable to find a service constant for ${T},\n" +
+  "add the following implicit value to your code if this is not a mistake:\n    " +
+  "'implicit val `systemService for ${T}` =\n      " +
+  "SystemService[${T}](GET_SERVICE_CONSTANT)`'")
 case class SystemService[T](name: String) extends AnyVal
 private[iota] trait Contexts {
   /** pull a context out of "thin air", checks for Activity, Fragment and WithContext */
@@ -139,6 +144,8 @@ private[iota] object ContextMacro {
       if (a.length > b._2.length) a else b._2
     }
 
+    if (service.isEmpty)
+      c.abort(c.enclosingPosition, s"No service constant found for $tpe")
     c.Expr[SystemService[T]](Apply(TypeApply(
       Select(reify(iota.SystemService).tree, newTermName("apply")),
       List(TypeTree(tpe))

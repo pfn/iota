@@ -4,9 +4,11 @@ import java.io.{FileOutputStream, OutputStreamWriter}
 
 import android.view.View
 
+import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
 import scala.reflect.macros.Context
 
+@implicitNotFound("cannot use findView prior to source application of id(Int)")
 case class ViewIdType[+A : ClassTag]()
 /**
   * @author pfnguyen

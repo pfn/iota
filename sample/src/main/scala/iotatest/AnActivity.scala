@@ -1,6 +1,7 @@
 package iotatest
 
 import android.app.Activity
+import android.net.ConnectivityManager
 
 import android.view.{ViewGroup, View}
 import android.widget._
@@ -55,6 +56,7 @@ class AnActivity extends Activity {
   )
 
 //  findView(Id.iamnotsetyet)
+  systemService[ConnectivityManager]
   w[SearchView] >>= hookM.queryText.onQueryTextChange((text: String) => IO {
     false
   })

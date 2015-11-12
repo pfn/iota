@@ -27,8 +27,7 @@ private[iota] object IdMacros {
 
     // check `Product` to be source compatible with scala 2.10 and 2.11
     val mapped = c.enclosingImplicits.headOption.fold {
-      c.warning(c.enclosingPosition, "materializeIdType is not being used properly for implicit resolution")
-      "android.view.View"
+      c.abort(c.enclosingPosition, "materializeIdType is not being used properly for implicit resolution")
     } { impls =>
       val tree = impls match {
         case p: Product if p.productArity == 2 => p.productElement(1).asInstanceOf[c.Tree]
@@ -41,11 +40,9 @@ private[iota] object IdMacros {
         case t => Left(t.symbol.fullName)
       }
 
-      idInfo.left.map(strs.get).right.map(ints.get).fold(identity,identity) getOrElse {
-        c.warning(c.enclosingPosition,
-          "findView used before id(_), cannot determine type, falling back to `android.view.View`")
-        "android.view.View"
-      }
+      idInfo.left.map(strs.get).right.map(ints.get).fold(identity,identity) getOrElse
+        c.abort(c.enclosingPosition,
+          "Id used before declaring in id(_), cannot determine type, aborting")
     }
 
     val tpe = rootMirror.staticClass(mapped).asType.toType

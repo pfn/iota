@@ -21,11 +21,17 @@ object ViewCombinators extends ViewCombinators
 object Contexts extends Contexts
 object Views extends Views with IdMacros {
   implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {
+    /** find a strongly-typed view.
+      * will fail to compile if id(xxx) is not used prior in the source
+      */
     def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int): A = {
       val v = vg.findViewById(id).asInstanceOf[A]
       if (v == null) throw new NullPointerException(s"view $id not found")
       v
     }
+    /** find a strongly-typed view.
+      * will fail to compile if id(xxx) is not used prior in the source
+      */
     def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int): Option[A] =
       Option(vg.findViewById(id).asInstanceOf[A])
   }

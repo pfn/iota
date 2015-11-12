@@ -17,14 +17,18 @@ private[iota] trait Contexts {
 
   implicit def materializeActivity: Activity = macro ContextMacro.materializeActivityImpl
 
-  /** find a strongly-typed view */
+  /** find a strongly-typed view.
+    * will fail to compile if id(xxx) is not used prior in the source
+    */
   def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): A = {
     val v = activity.findViewById(id).asInstanceOf[A]
     if (v == null) throw new NullPointerException(s"view $id not found")
     v
   }
 
-  /** find a strongly-typed view that may not be present */
+  /** find a strongly-typed view.
+    * will fail to compile if id(xxx) is not used prior in the source
+    */
   def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): Option[A] =
     Option(activity.findViewById(id).asInstanceOf[A])
 

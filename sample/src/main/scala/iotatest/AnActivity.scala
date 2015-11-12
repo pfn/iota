@@ -33,7 +33,7 @@ class AnActivity extends Activity {
     IO(new TextView(this)) >>= condK(sw(600.dp) ? lp(MATCH_PARENT, MATCH_PARENT) | lp(WRAP_CONTENT, WRAP_CONTENT)),
     IO(new TextView(this)) >>= condK(sw(600.dp) ? lp(WRAP_CONTENT, WRAP_CONTENT))
   )
-  materializeIdType
+//  materializeIdType
 
   val tv: TextView = firstlayout.perform().findView(Id.firsttext)
   val tv1: TextView = findView(Id.firsttext)
@@ -54,7 +54,7 @@ class AnActivity extends Activity {
     w[TextView] >>= lp(MATCH_PARENT, MATCH_PARENT)
   )
 
-  findView(Id.iamnotsetyet)
+//  findView(Id.iamnotsetyet)
   w[SearchView] >>= hookM.queryText.onQueryTextChange((text: String) => IO {
     false
   })

@@ -65,6 +65,8 @@ private[iota] object ContextMacro {
         Option(This(tpe.typeSymbol))
       } else if (tpe <:< c.weakTypeOf[HasContext]) {
         Option(Select(This(tpe.typeSymbol), newTermName("context")))
+      } else if (tpe <:< c.weakTypeOf[HasActivity]) {
+        Option(Select(This(tpe.typeSymbol), newTermName("activity")))
       } else if (tpe <:< c.weakTypeOf[android.app.Fragment]) {
         Option(Apply(Select(This(tpe.typeSymbol), newTermName("getActivity")), Nil))
       } else if (supportFragment.exists(tpe <:< _.toType)) {

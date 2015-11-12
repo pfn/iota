@@ -4,7 +4,7 @@ A small, an iota, side-effect tracking library and layout DSL
 
 ## add to your build
 
-`libraryDependencies += "com.hanhuy.android" %% "iota" % "0.4"`
+`libraryDependencies += "com.hanhuy.android" %% "iota" % "0.5"`
 
 ## Usage
 
@@ -28,7 +28,7 @@ All compositions are functions, no special classes.
   ViewGroups with children. `c` is a helper function for providing the ViewGroup
   type for LayoutParams creation when not inside of `IO[_ <: ViewGroup].apply()`.
 * `Contexts._` - implicit materializer for `android.content.Context` depending
-  on what class one is in (`Activity`, `Fragment`, `WithContext`, etc)
+  on what class one is in (`Activity`, `Fragment`, `HasContext`, etc)
 * `Configurations._` - has functions for detecting the current configuration:
   `sw(smallest-width)`, `v(version)`, `landscape` and `portrait`
 * `LayoutCombinators._` - has `margins`, `lp` and `lpK` functions for working

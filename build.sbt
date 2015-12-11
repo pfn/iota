@@ -22,13 +22,15 @@ lazy val sample = project.settings(androidBuildJar: _*).settings(
 
 androidBuildJar
 
+inConfig(Compile)(Defaults.packageTaskSettings(packageSrc, Defaults.packageSrcMappings))
+
 classDirectory in Compile := crossTarget.value / "classes"
 
 name := "iota"
 
 organization := "com.hanhuy.android"
 
-version := "0.6"
+version := "0.7-SNAPSHOT"
 
 platformTarget := platform
 

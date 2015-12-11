@@ -71,6 +71,8 @@ private[iota] object IdMacros {
     import FileUtil._
     import c.universe._
     val tpeInfo = c.weakTypeOf[A].typeSymbol.fullName
+    if (tpeInfo == "iota.ViewCombinators.A")
+      c.abort(c.enclosingPosition, "Unable to determine concrete type for A")
     val idInfo: Either[String,Int] = id match {
       case c.Expr(Literal(Constant(n: Int))) => Right(n)
       case x => Left(x.tree.symbol.fullName)

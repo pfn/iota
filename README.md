@@ -4,7 +4,7 @@ A small, an iota, side-effect tracking library and layout DSL
 
 ## add to your build
 
-`libraryDependencies += "com.hanhuy.android" %% "iota" % "0.6"`
+`libraryDependencies += "com.hanhuy.android" %% "iota" % "0.7"`
 
 ## Usage
 

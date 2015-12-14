@@ -47,15 +47,17 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
     val listener = setter.paramss.head.head.typeSignature
 
     val onMethod = methodName getOrElse e
-    // hack for partially implemented listeners, until we move to 2.11 only and can use isAbstract
-    val toImplement = if (!listener.typeSymbol.asClass.isAbstractClass) Nil else listener.members.collect {
-      case m: MethodSymbol if !m.isFinal && m.isJava && !m.isConstructor && !OBJECT_FUNCTIONS(m.name.encoded) && m.name.encoded != onMethod=>
-        m
-    }
     val on = util.Try {
       listener.member(newTermName(onMethod)).asMethod
+    }.recover { case _ =>
+      listener.member(newTermName("on" + onMethod.capitalize)).asMethod
     } getOrElse {
-      c.abort(c.enclosingPosition, s"Unsupported event listener class in $setter (no $onMethod)")
+      c.abort(c.enclosingPosition, s"Unsupported event listener class in $setter (no method '$onMethod' in $listener)")
+    }
+    // hack for partially implemented listeners, until we move to 2.11 only and can use isAbstract
+    val toImplement = if (!listener.typeSymbol.asClass.isAbstractClass) Nil else listener.members.collect {
+      case m: MethodSymbol if !m.isFinal && m.isJava && !m.isConstructor && !OBJECT_FUNCTIONS(m.name.encoded) && m.name.encoded != on.name.encoded =>
+        m
     }
 
     (setter, listener, on, toImplement.toList)

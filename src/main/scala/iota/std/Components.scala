@@ -19,6 +19,7 @@ object LayoutCombinators extends LayoutCombinators
 object TextCombinators extends TextCombinators
 object ViewCombinators extends ViewCombinators
 object Contexts extends Contexts
+object Themes extends Themes
 object Views extends Views with IdMacros {
   implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {
     /** find a strongly-typed view.

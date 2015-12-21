@@ -13,6 +13,7 @@ private[iota] trait AllComponents
   with Views
   with TernaryOps
   with Contexts
+  with Themes
   with Configurations
   with ViewCombinators
   with ImageCombinators

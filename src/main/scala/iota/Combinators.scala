@@ -149,7 +149,7 @@ private[iota] trait TextCombinators {
   def singleLine[A <: TextView](single: Boolean): Kestrel[A] = kestrel(_.setSingleLine(single))
   def singleLine[A <: TextView]: Kestrel[A] = singleLine[A](true)
 
-  def textAppearance[A <: TextView](resid: Int): Kestrel[A] = kestrel(tv => tv.setTextAppearance(tv.getContext(resid)))
+  def textAppearance[A <: TextView](resid: Int): Kestrel[A] = kestrel(tv => tv.setTextAppearance(tv.getContext, resid))
 }
 
 private[iota] trait ImageCombinators {

@@ -3,6 +3,7 @@ package iota
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.text.Html
+import android.text.method.TransformationMethod
 import android.view.{ViewGroup, View}
 import android.widget.{ImageView, TextView}
 
@@ -46,6 +47,8 @@ private[iota] trait ViewCombinators {
     }
   }
 
+  def clickable[A <: View](canclick: Boolean): Kestrel[A] = kestrel(_.setClickable(canclick))
+  def clickable[A <: View]: Kestrel[A] = clickable[A](true)
   def backgroundDrawable[A <: View](d: Drawable): Kestrel[A] = kestrel(_.setBackgroundDrawable(d))
   def backgroundResource[A <: View](resid: Int): Kestrel[A] = kestrel(_.setBackgroundResource(resid))
   def backgroundColor[A <: View](color: Int):    Kestrel[A] = kestrel(_.setBackgroundColor(color))
@@ -138,10 +141,15 @@ private[iota] trait TextCombinators {
   def hint[A <: TextView](hint: Int):          Kestrel[A] = kestrel(_.setHint(hint))
 
   def html[A <: TextView](html: String): Kestrel[A] = kestrel(_.setText(Html.fromHtml(html)))
+  def hintColor[A <: TextView](color: Int): Kestrel[A] = kestrel(_.setHintTextColor(color))
+  def textColor[A <: TextView](color: Int): Kestrel[A] = kestrel(_.setTextColor(color))
+  def textTransformation[A <: TextView](transform: TransformationMethod): Kestrel[A] = kestrel(_.setTransformationMethod(transform))
   def inputType[A <: TextView](types: Int): Kestrel[A] = kestrel(_.setInputType(types))
   def textGravity[A <: TextView](gravity: Int): Kestrel[A] = kestrel(_.setGravity(gravity))
   def singleLine[A <: TextView](single: Boolean): Kestrel[A] = kestrel(_.setSingleLine(single))
   def singleLine[A <: TextView]: Kestrel[A] = singleLine[A](true)
+
+  def textAppearance[A <: TextView](resid: Int): Kestrel[A] = kestrel(tv => tv.setTextAppearance(tv.getContext(resid)))
 }
 
 private[iota] trait ImageCombinators {

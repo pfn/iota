@@ -6,6 +6,10 @@ A small, an iota, side-effect tracking library and layout DSL
 
 `libraryDependencies += "com.hanhuy.android" %% "iota" % "0.8"`
 
+Clear proguard warnings, these will not cause any runtime crashes
+
+`proguardOptions += "-dontwarn iota.**"`
+
 ## Usage
 
 `import iota._` or import individual components from `iota.std._` and `iota.IO`

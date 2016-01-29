@@ -72,4 +72,9 @@ package object iota extends AllComponents {
     def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int): Option[A] =
       Option(vg.findViewById(id).asInstanceOf[A])
   }
+
+  implicit class ViewTagger(val view: android.view.View) extends AnyVal {
+    def tag[T](id: Int, value: T) = macro IdMacros.tIdImpl[T]
+    def tag[T : TagIdType : ClassTag](id: Int): T = view.getTag(id).asInstanceOf[T]
+  }
 }

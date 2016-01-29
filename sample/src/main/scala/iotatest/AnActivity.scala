@@ -38,6 +38,9 @@ class AnActivity extends Activity {
 
   val tv: TextView = firstlayout.perform().findView(Id.firsttext)
   val tv1: TextView = findView(Id.firsttext)
+  tv1.tag(Id.firsttext, "Test")
+//  val t = tv1.tag(Id.firsttext)
+//  t.length > 0
 
   IO(new FrameLayout(this))(IO(new View(this)))
   IO(new View(this)) >>= id(1) >>= hook0.onClick(IO {

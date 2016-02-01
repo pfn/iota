@@ -35,6 +35,8 @@ private[iota] trait ViewCombinators {
   def enabled[A <: View]:  Kestrel[A] = enabled(true)
   def disabled[A <: View]: Kestrel[A] = enabled(false)
 
+  def elevation[A <: View](elevation: Float): Kestrel[A] = kestrel(_.setElevation(elevation))
+
   def padding[A <: View](left:   Int = 0,
                          top:    Int = 0,
                          right:  Int = 0,

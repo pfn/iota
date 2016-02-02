@@ -17,7 +17,7 @@ object Id extends Dynamic {
   // application ID start at 0x7f and above, system ids start at 0x01
   // lets arbitrarily take 0x7e
   // TODO this needs to be made configurable/unique by library...
-  private[this] val BASE_ID = 0x7e000000
+  private[this] val BASE_ID = 0x7f0dffff
   private[this] var ids = Map.empty[String,Int]
   private[this] var mapTime = 0l
 
@@ -42,7 +42,7 @@ object Id extends Dynamic {
       val currentSrc = io.Source.fromFile(currentId)
       val newId = currentSrc.getLines.take(1).next.toInt
       currentSrc.close()
-      writeCurrentId(currentId, newId + 1)
+      writeCurrentId(currentId, newId - 1)
       writeNewId(idsfile, s, newId)
       newId
     })

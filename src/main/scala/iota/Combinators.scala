@@ -24,19 +24,6 @@ private[iota] trait Combinators {
 private[iota] trait ViewCombinators {
   def id[A <: View](id: Int): Kestrel[A] = macro IdMacros.tIdImpl[A]
 
-  def visibility[A <: View](visibility: Int): Kestrel[A] =
-    kestrel(_.setVisibility(visibility))
-  def gone[A <: View]:      Kestrel[A] = visibility(View.GONE)
-  def visible[A <: View]:   Kestrel[A] = visibility(View.VISIBLE)
-  def invisible[A <: View]: Kestrel[A] = visibility(View.INVISIBLE)
-
-  def enabled[A <: View](enable: Boolean): Kestrel[A] =
-    kestrel(_.setEnabled(enable))
-  def enabled[A <: View]:  Kestrel[A] = enabled(true)
-  def disabled[A <: View]: Kestrel[A] = enabled(false)
-
-  def elevation[A <: View](elevation: Float): Kestrel[A] = kestrel(_.setElevation(elevation))
-
   def padding[A <: View](left:   Int = 0,
                          top:    Int = 0,
                          right:  Int = 0,
@@ -48,13 +35,6 @@ private[iota] trait ViewCombinators {
       v.setPadding(left, top, right, bottom)
     }
   }
-
-  def clickable[A <: View](canclick: Boolean): Kestrel[A] = kestrel(_.setClickable(canclick))
-  def clickable[A <: View]: Kestrel[A] = clickable[A](true)
-  def backgroundDrawable[A <: View](d: Drawable): Kestrel[A] = kestrel(_.setBackgroundDrawable(d))
-  def backgroundResource[A <: View](resid: Int): Kestrel[A] = kestrel(_.setBackgroundResource(resid))
-  def backgroundColor[A <: View](color: Int):    Kestrel[A] = kestrel(_.setBackgroundColor(color))
-  def backgroundColor[A <: View](color: String): Kestrel[A] = kestrel(_.setBackgroundColor(Color.parseColor(color)))
 
   import language.dynamics
 
@@ -93,6 +73,30 @@ private[iota] trait ViewCombinators {
     }
     def selectDynamic[V](event: String): _hookM[V] = new _hookM(event)
   }
+}
+
+private[iota] trait ViewCombinatorExtras {
+  def visibility[A <: View](visibility: Int): Kestrel[A] =
+    kestrel(_.setVisibility(visibility))
+  def gone[A <: View]:      Kestrel[A] = visibility(View.GONE)
+  def visible[A <: View]:   Kestrel[A] = visibility(View.VISIBLE)
+  def invisible[A <: View]: Kestrel[A] = visibility(View.INVISIBLE)
+
+  def enabled[A <: View](enable: Boolean): Kestrel[A] =
+    kestrel(_.setEnabled(enable))
+  def enabled[A <: View]:  Kestrel[A] = enabled(true)
+  def disabled[A <: View]: Kestrel[A] = enabled(false)
+
+  def elevation[A <: View](elevation: Float): Kestrel[A] = kestrel(_.setElevation(elevation))
+
+
+  def clickable[A <: View](canclick: Boolean): Kestrel[A] = kestrel(_.setClickable(canclick))
+  def clickable[A <: View]: Kestrel[A] = clickable[A](true)
+
+  def backgroundDrawable[A <: View](d: Drawable): Kestrel[A] = kestrel(_.setBackgroundDrawable(d))
+  def backgroundResource[A <: View](resid: Int): Kestrel[A] = kestrel(_.setBackgroundResource(resid))
+  def backgroundColor[A <: View](color: Int):    Kestrel[A] = kestrel(_.setBackgroundColor(color))
+  def backgroundColor[A <: View](color: String): Kestrel[A] = kestrel(_.setBackgroundColor(Color.parseColor(color)))
 }
 
 private[iota] trait LayoutCombinators {

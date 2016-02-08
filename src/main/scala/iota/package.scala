@@ -18,9 +18,7 @@ private[iota] trait AllComponents
   with Themes
   with Configurations
   with ViewCombinators
-  with ImageCombinators
   with LayoutCombinators
-  with TextCombinators
 }
 package object iota extends AllComponents {
   type Kestrel[A] = A => IO[A]

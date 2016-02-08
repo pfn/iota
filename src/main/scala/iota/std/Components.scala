@@ -20,6 +20,7 @@ object ImageCombinators extends ImageCombinators
 object LayoutCombinators extends LayoutCombinators
 object TextCombinators extends TextCombinators
 object ViewCombinators extends ViewCombinators
+object ViewCombinatorExtras extends ViewCombinatorExtras
 object Contexts extends Contexts
 object Themes extends Themes
 object Views extends Views with IdMacros {

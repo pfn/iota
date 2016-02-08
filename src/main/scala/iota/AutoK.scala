@@ -5,7 +5,7 @@ import scala.reflect.macros.Context
 /**
   * @author pfnguyen
   */
-trait AutoK {
+private[iota] trait AutoK {
   import language.dynamics
 
   /**

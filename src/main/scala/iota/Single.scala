@@ -5,7 +5,7 @@ import scala.reflect.macros.Context
 /**
   * @author pfnguyen
   */
-trait Single {
+private[iota] trait Single {
   import language.dynamics
   class single0Helper[A] extends Dynamic {
     def apply(body: Any): A = macro SingleMacro.apply0[A]

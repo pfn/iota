@@ -15,6 +15,7 @@ object Kleisli {
 }
 object Combinators extends Combinators
 object AutoK extends AutoK
+object Single extends Single
 object ImageCombinators extends ImageCombinators
 object LayoutCombinators extends LayoutCombinators
 object TextCombinators extends TextCombinators

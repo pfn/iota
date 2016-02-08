@@ -10,6 +10,7 @@ package iota {
 private[iota] trait AllComponents
   extends Combinators
   with AutoK
+  with Single
   with IdMacros
   with Views
   with TernaryOps

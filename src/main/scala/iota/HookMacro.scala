@@ -1,6 +1,5 @@
 package iota
 
-import scala.reflect.internal.TreeGen
 import scala.reflect.macros.Context
 
 /**
@@ -25,7 +24,7 @@ private[iota] object HookMacro {
   }
 }
 
-private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
+private[iota] class HookMacro[C <: Context](val c: C) extends ListenerMacros[C] {
   private val OBJECT_FUNCTIONS = Set("clone", "toString", "hashCode", "equals", "finalize")
   import c.universe._
 
@@ -91,7 +90,25 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
     c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
   }
 
-  def newListenerClass(tpe: Type, sym: MethodSymbol, handler: Tree, overrides: List[MethodSymbol], handleArgs: Boolean = false) = {
+  def newKestrel(tpe: Type, method: String, handler: Tree) = {
+    val vparam = c.fresh()
+    Apply(
+      Select(Ident(newTermName("iota")), newTermName("kestrel")),
+      List(
+        Function(
+          List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
+          Apply(Select(Ident(newTermName(vparam)), newTermName(method)), List(handler))
+        )
+      )
+    )
+  }
+}
+
+trait ListenerMacros[C <: Context] extends Internal210 {
+  val c: C
+  import c.universe._
+
+  def newListenerClass(tpe: Type, sym: MethodSymbol, handler: Tree, overrides: List[MethodSymbol], handleArgs: Boolean = false, handleIO: Boolean = true) = {
     val listenerTypeName = c.fresh()
     Block(
       List(
@@ -111,7 +128,7 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
                     )
                   ), Literal(Constant(()))
                 )
-              ), newListenerMethod(sym, handler, handleArgs)
+              ), newListenerMethod(sym, handler, handleArgs, handleIO)
             ) ++ newListenerOverrides(overrides)
           )
 
@@ -153,7 +170,7 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
       )
     }
   }
-  def newListenerMethod(sym: MethodSymbol, handler: Tree, handleArgs: Boolean = false) = {
+  def newListenerMethod(sym: MethodSymbol, handler: Tree, handleArgs: Boolean = false, withIO: Boolean = true) = {
     val params = sym.paramss.head map { p =>
       ValDef(Modifiers(Flag.PARAM),
         newTermName(c.fresh()),
@@ -162,28 +179,21 @@ private[iota] class HookMacro[C <: Context](val c: C) extends Internal210 {
 
     val h = spliceTree(c)(c.internal.enclosingOwner, handler)
 
+    val handle = if (handleArgs) {
+      Apply(Select(h, newTermName("apply")), params.map(p => Ident(p.name)))
+    } else h
+
+    val handleIO = if (withIO) {
+      Apply(Select(handle, newTermName("perform")), Nil)
+    } else handle
+
     DefDef(
       Modifiers(Flag.OVERRIDE),
       newTermName(sym.name.encoded),
       List(),
       List(params),
       TypeTree(),
-      Apply(Select(if (handleArgs) {
-        Apply(Select(h, newTermName("apply")), params.map(p => Ident(p.name)))
-      } else h, newTermName("perform")), Nil)
-    )
-  }
-
-  def newKestrel(tpe: Type, method: String, handler: Tree) = {
-    val vparam = c.fresh()
-    Apply(
-      Select(Ident(newTermName("iota")), newTermName("kestrel")),
-      List(
-        Function(
-          List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
-          Apply(Select(Ident(newTermName(vparam)), newTermName(method)), List(handler))
-        )
-      )
+      handleIO
     )
   }
 }

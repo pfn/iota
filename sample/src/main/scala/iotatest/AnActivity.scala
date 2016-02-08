@@ -1,5 +1,8 @@
 package iotatest
 
+import java.io.{File, FilenameFilter}
+
+import android.animation.Animator.AnimatorListener
 import android.app.Activity
 import android.net.ConnectivityManager
 
@@ -54,6 +57,13 @@ class AnActivity extends Activity {
   c[FrameLayout](
     w[TextView] >>= lp(MATCH_PARENT, MATCH_PARENT)
   )
+
+  single[View.OnClickListener] { v: View => println("clicked") }
+  single[View.OnClickListener].onClick { v: View => println("clicked") }
+  single0[View.OnClickListener].onClick { println("clicked") }
+  single0[View.OnClickListener] { println("clicked") }
+
+  new View(this).animate().alpha(1.0f).setListener(single0[AnimatorListener].onAnimationEnd(finish()))
 
 //  findView(Id.iamnotsetyet)
   systemService[ConnectivityManager]
@@ -119,4 +129,7 @@ object Main extends App {
   println(Id.foo)
 
   println((IO(new StringBuilder) >>= k.append("Foo")).perform())
+
+  val filter = single[FilenameFilter].accept { (d: File, f: String) => println("HI" + f); true }
+  new File("/").listFiles(filter)
 }

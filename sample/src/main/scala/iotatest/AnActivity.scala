@@ -39,7 +39,7 @@ class AnActivity extends Activity {
   )
 //  materializeIdType
 
-  w[View] >>= k.visibility((if (true) 1 else 2): Int) // this fails to compile if : Int is removed
+  w[View] >>= k.visibility(if (true) 1 else 2)
 
   val tv: TextView = firstlayout.perform().findView(Id.firsttext)
   val tv1: TextView = findView(Id.firsttext)

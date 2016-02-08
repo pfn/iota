@@ -25,11 +25,11 @@ private[iota] trait AutoK {
     *  `NAME`
     */
   object k extends Dynamic {
-    def applyDynamic[V](method: String)(args: Any*): Kestrel[V] = macro AutoKMacro.applyK[V]
+    def applyDynamic[V,A](method: String)(args: A*): Kestrel[V] = macro AutoKMacro.applyK[V,A]
   }
 }
 private[iota] object AutoKMacro {
-  def applyK[V: c.WeakTypeTag](c: Context)(method: c.Expr[String])(args: c.Expr[Any]*): c.Expr[Kestrel[V]] = {
+  def applyK[V: c.WeakTypeTag,A](c: Context)(method: c.Expr[String])(args: c.Expr[Any]*): c.Expr[Kestrel[V]] = {
     val helper = new AutoKMacro[c.type](c)
     helper.applyK(method)(args)
   }
@@ -57,7 +57,7 @@ private[iota] class AutoKMacro[C <: Context](val c: C) extends Internal210 {
     }.getOrElse(c.abort(c.enclosingPosition, s"no method for $e found in $tp"))
     r
   }
-  def applyK[V: c.WeakTypeTag](method: c.Expr[String])(args: Seq[c.Expr[Any]]): c.Expr[Kestrel[V]] = {
+  def applyK[V: c.WeakTypeTag,A](method: c.Expr[String])(args: Seq[c.Expr[Any]]): c.Expr[Kestrel[V]] = {
     val Expr(Literal(Constant(e: String))) = method
     c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setterFor(e).name.encoded, args))
   }

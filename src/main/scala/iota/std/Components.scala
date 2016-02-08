@@ -14,6 +14,7 @@ object Kleisli {
   }
 }
 object Combinators extends Combinators
+object AutoK extends AutoK
 object ImageCombinators extends ImageCombinators
 object LayoutCombinators extends LayoutCombinators
 object TextCombinators extends TextCombinators
@@ -25,6 +26,7 @@ object Views extends Views with IdMacros {
     /** find a strongly-typed view.
       * will fail to compile if id(xxx) is not used prior in the source
       */
+    @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
     def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int): A = {
       val v = vg.findViewById(id).asInstanceOf[A]
       if (v == null) throw new NullPointerException(s"view $id not found")
@@ -33,6 +35,7 @@ object Views extends Views with IdMacros {
     /** find a strongly-typed view.
       * will fail to compile if id(xxx) is not used prior in the source
       */
+    @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
     def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int): Option[A] =
       Option(vg.findViewById(id).asInstanceOf[A])
   }

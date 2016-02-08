@@ -25,6 +25,7 @@ private[iota] trait Contexts {
   /** find a strongly-typed view.
     * will fail to compile if id(xxx) is not used prior in the source
     */
+  @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
   def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): A = {
     val v = activity.findViewById(id).asInstanceOf[A]
     if (v == null) throw new NullPointerException(s"view $id not found")
@@ -34,6 +35,7 @@ private[iota] trait Contexts {
   /** find a strongly-typed view.
     * will fail to compile if id(xxx) is not used prior in the source
     */
+  @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
   def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): Option[A] =
     Option(activity.findViewById(id).asInstanceOf[A])
 

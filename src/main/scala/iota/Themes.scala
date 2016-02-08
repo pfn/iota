@@ -18,7 +18,7 @@ private[iota] trait Themes {
     } else throw new IllegalStateException("attribute not found: " + attr)
   }
   /** retrieve a set of styleable attributes */
-  def themeAttrs[A](styleable: Array[Int], f: TypedArray => A)(implicit context: Context): A = {
+  def styleableAttrs[A](styleable: Array[Int], f: TypedArray => A)(implicit context: Context): A = {
     val themeAttrs = context.getTheme.obtainStyledAttributes(styleable)
     val c = f(themeAttrs)
     themeAttrs.recycle()

@@ -117,4 +117,6 @@ object Main extends App {
   println(Id.foo)
   println(Id.foobar)
   println(Id.foo)
+
+  println((IO(new StringBuilder) >>= k.append("Foo")).perform())
 }

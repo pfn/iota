@@ -41,6 +41,8 @@ class AnActivity extends Activity {
 
   w[View] >>= k.visibility(if (true) 1 else 2)
 
+  w[TextView] >>= k.textAppearance(if (true) new AnActivity else new Foobar, if (true) 1 else 2)
+
   val tv: TextView = firstlayout.perform().findView(Id.firsttext)
   val tv1: TextView = findView(Id.firsttext)
 

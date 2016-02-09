@@ -109,7 +109,7 @@ private[iota] trait ListenerMacros[C <: Context] extends Internal210 {
   import c.universe._
 
   def newListenerClass(tpe: Type, sym: MethodSymbol, handler: Tree, overrides: List[MethodSymbol], handleArgs: Boolean = false, handleIO: Boolean = true) = {
-    val listenerTypeName = c.fresh()
+    val listenerTypeName = c.fresh("$anon")
     Block(
       List(
         ClassDef(

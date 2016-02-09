@@ -123,6 +123,9 @@ class NotFramework extends HasContext {
 //}
 
 object Main extends App {
+  implicit class ExtendFiles(val f: File) extends AnyVal {
+    def listF(fn: String => Boolean) = f.listFiles(single[FilenameFilter] { (_: File, s: String) => fn(s) })
+  }
   val x = IO({ println("First side effect"); "Should appear last" }) >>= kestrel(s => println("Should not see anything before 'Another line'"))
 
   println("Another line")
@@ -136,4 +139,5 @@ object Main extends App {
 
   val filter = single[FilenameFilter].accept { (d: File, f: String) => println("HI" + f); true }
   new File("/").listFiles(filter)
+  new File("/").listF(s => { println("Found: " + s); true })
 }

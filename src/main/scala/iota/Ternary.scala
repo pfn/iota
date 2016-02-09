@@ -15,7 +15,7 @@ private[iota] trait TernaryOps {
 
 sealed trait Ternary[A]
 private[iota] case class TernaryElse[A](cond: TernaryCondition[A], ifFalse: Kestrel[A]) extends Ternary[A]
-private[iota] case class TernaryCondition[A](b: Boolean, ifTrue: Kestrel[A]) extends Ternary[A] {
+case class TernaryCondition[A] private[iota](b: Boolean, ifTrue: Kestrel[A]) extends Ternary[A] {
   def |(ifFalse: Kestrel[A]): TernaryElse[A] = TernaryElse(this, ifFalse)
 }
 

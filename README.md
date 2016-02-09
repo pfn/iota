@@ -60,10 +60,12 @@ import android.view._
 import android.widget._
 
 class MyActivity extends Activity {
+
+  // compose multiple A => IO[A] together, re-use them anywhere we would like
   // c[LinearLayout] is necessary to hint to `lpK` that LinearLayout.LayoutParams
   // need to be created.
   val button2Adjustments: Kestrel[Button] = c[LinearLayout](
-    text("Click Me 2") >=> hook.onClick((v: View) => IO {
+    k.text("Click Me 2") >=> hook.onClick((v: View) => IO {
       Toast.makeText(this, s"button ${v.getId} was clicked", Toast.LENGTH_SHORT).show()
     }) >=> lpK(WRAP_CONTENT, WRAP_CONTENT, 1.0f){ p: LinearLayout.LayoutParams =>
       p.gravity = Gravity.CENTER
@@ -71,11 +73,13 @@ class MyActivity extends Activity {
     }
   )
 
+  // use a view holder pattern, such as the declaration below, for optimal static safety
+  lazy val button2 = new Button(this)
   val layout = l[LinearLayout](
-    w[Button] >>= text("Click Me") >>= hook0.onClick(IO {
+    w[Button] >>= k.text("Click Me") >>= hook0.onClick(IO {
       Toast.makeText(this, "The button was clicked", Toast.LENGTH_SHORT).show()
     }) >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f),
-    w[Button] >>= button2Adjustments >>= id(Id.button2),
+    IO(button2) >>= button2Adjustments >>= id(Id.button2),
     w[ListView] >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f) >>=
       hookM.scroll.onScrollStateChanged((list: AbsListView, state: Int) => IO {
         // partially implemented listeners with direct method name overrides
@@ -83,13 +87,7 @@ class MyActivity extends Activity {
         // parameters can be ignored.
         Toast.makeText(this, "Scroll state changed: " + state, Toast.LENGTH_SHORT).show()
       })
-  ) >>= kestrel (_.setOrientation(LinearLayout.VERTICAL))
-
-  // many IDEs can't tell that button2 is a Button, they will often think that
-  // this is a View; a type ascription can be used to hint:
-  // `lazy val button2: Button = findView(Id.button2)`
-  // the type ascribed must be correct or else scalac will crash
-  lazy val button2 = findView(Id.button2) // is typed as android.widget.Button
+  ) >>= k.orientation(LinearLayout.VERTICAL)
 
   override def onCreate(b: Bundle) {
     setContentView(layout.perform())
@@ -98,12 +96,15 @@ class MyActivity extends Activity {
 }
 ```
 
+This [sample](sample/src/main/scala/iotest/AnActivity.scala) is a sandbox for
+trying out all the macros and features available in `iota`.
+
 #### Motivations for creation
 
 As a long time user of `macroid` I enjoy what it brought to layout dsl, but do
-not like how certain features work: mixing in `Contexts[A]`, super verbose `lp`
-layout parameter creation, failures in type inference, lack of type-safety in
-ID lookups, and operators that don't necessarily make sense (i.e. `<~`, et al).
-The design goal here is to be as pure as possible while remaining terse and
-using an existing vocabulary: `kestrel` (K-combinator), `>>=` (flatMap, bind),
-`>=>` (kleisli composition), etc.
+not like how certain features work: mixing in `Contexts[A]`, extremely verbose
+`lp` layout parameter creation, failures in type inference, lack of type-safety
+in ID lookups, and operators that don't necessarily make sense (i.e. `<~`, et
+al). The design goal here is to be as pure as possible while remaining terse
+and using an existing vocabulary: `kestrel` (K-combinator), `>>=` (flatMap,
+bind), `>=>` (kleisli composition), etc.

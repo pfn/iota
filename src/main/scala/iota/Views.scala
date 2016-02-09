@@ -9,7 +9,7 @@ import scala.reflect.macros.Context
 /**
   * @author pfnguyen
   */
-trait Views {
+private[iota] trait Views {
 
   /** create any android `ViewGroup` that takes `Context` as a single constructor parameter.
     * additionally, provides type hints for the use of `lp` and `lpK` for constructing

@@ -13,7 +13,7 @@ case class ViewIdType[+A : ClassTag]()
 /**
   * @author pfnguyen
   */
-trait IdMacros {
+private[iota] trait IdMacros {
   implicit def materializeIdType: ViewIdType[Any] = macro IdMacros.matIdType
 }
 private[iota] object IdMacros {

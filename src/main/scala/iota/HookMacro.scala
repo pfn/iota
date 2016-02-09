@@ -104,7 +104,7 @@ private[iota] class HookMacro[C <: Context](val c: C) extends ListenerMacros[C] 
   }
 }
 
-trait ListenerMacros[C <: Context] extends Internal210 {
+private[iota] trait ListenerMacros[C <: Context] extends Internal210 {
   val c: C
   import c.universe._
 

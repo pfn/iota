@@ -96,7 +96,7 @@ class MyActivity extends Activity {
 }
 ```
 
-This [sample](sample/src/main/scala/iotest/AnActivity.scala) is a sandbox for
+This [sample](sample/src/main/scala/iotatest/AnActivity.scala) is a sandbox for
 trying out all the macros and features available in `iota`.
 
 #### Motivations for creation

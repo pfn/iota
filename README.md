@@ -4,7 +4,7 @@ A small, an iota, side-effect tracking library and layout DSL
 
 ## add to your build
 
-`libraryDependencies += "com.hanhuy.android" %% "iota" % "1.0.0"`
+`libraryDependencies += "com.hanhuy.android" %% "iota" % "1.0.1"`
 
 Clear proguard warnings, these will not cause any runtime crashes
 
@@ -25,6 +25,13 @@ All compositions are functions, no special classes.
 ### Available components
 
 * `Combinators._` - defines the K-combinator `kestrel[A](f: A => _)`: `A => IO[A]`
+* `AutoK._` - defines `k[A]` macro, used to turn any function on `A` into
+  a K-combinator, e.g. `TextView#setHint` can be accessed as `k.hint` and
+  `k.setHint`
+* `Single._` - defines `single[A]` which can be used to implement anonymous
+  abstract classes and all interfaces. e.g.,
+  `single[TextWatcher].onTextChanged((s: CharSequence, x: Int, y: Int, z: Int) => println(s))` can implement a `TextWatcher#onTextChanged` while doing a
+  no-op for the `afterTextChanged` and `beforeTextChanged` methods.
 * `Kleisli._` - provides `>=>` (andThen) to compose `A => IO[B]` functions
 * `Ternary._` - `condK(condition ? (A => IO[B]) | (A => IO[B])) composition`
 * `Views._` - has `w[View]`, `l[View]` and `c[View]` functions, `w` and `l`

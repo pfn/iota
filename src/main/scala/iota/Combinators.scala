@@ -1,12 +1,15 @@
 package iota
 
+import android.animation.Animator
+import android.animation.Animator.AnimatorListener
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.text.Html
 import android.text.method.TransformationMethod
-import android.view.{ViewGroup, View}
+import android.view.{ViewPropertyAnimator, ViewGroup, View}
 import android.widget.{ImageView, TextView}
 
+import scala.concurrent.{ExecutionContext, Promise, Future}
 import scala.reflect.internal.annotations.compileTimeOnly
 
 /**
@@ -21,6 +24,17 @@ private[iota] trait Combinators {
 
   private[iota] def noopK[A]: Kestrel[A] = kestrel(_ => ())
 }
+
+private[iota] trait FutureCombinators {
+  def defer[A](f: Kestrel[A])(implicit ec: ExecutionContext): Future[A] => IO[Future[A]] = future => IO {
+    future.map(a => f(a).perform())
+  }
+
+  def deferF[A](f: A => IO[Future[A]])(implicit ec: ExecutionContext): Future[A] => IO[Future[A]] = future => IO {
+    future.flatMap(a => f(a).perform())
+  }
+}
+
 private[iota] trait ViewCombinators {
   def id[A <: View](id: Int): Kestrel[A] = macro IdMacros.tIdImpl[A]
 
@@ -34,6 +48,28 @@ private[iota] trait ViewCombinators {
     } else {
       v.setPadding(left, top, right, bottom)
     }
+  }
+
+  def animate[A <: View,B](animation: ViewPropertyAnimator => B, listener: Option[AnimatorListener] = None): A => IO[Future[A]] = view => IO {
+    val animator = view.animate()
+    animation(animator)
+    val promise = Promise[A]()
+    animator.setListener(new AnimatorListener {
+      override def onAnimationEnd(animation: Animator) = {
+        listener.foreach(_.onAnimationEnd(animation))
+        animator.setListener(null)
+        promise.success(view)
+      }
+
+      override def onAnimationRepeat(animation: Animator) =
+        listener.foreach(_.onAnimationRepeat(animation))
+      override def onAnimationStart(animation: Animator) =
+        listener.foreach(_.onAnimationStart(animation))
+      override def onAnimationCancel(animation: Animator) =
+        listener.foreach(_.onAnimationCancel(animation))
+    })
+    animator.start()
+    promise.future
   }
 
   import language.dynamics
@@ -88,7 +124,6 @@ private[iota] trait ViewCombinatorExtras {
   def disabled[A <: View]: Kestrel[A] = enabled(false)
 
   def elevation[A <: View](elevation: Float): Kestrel[A] = kestrel(_.setElevation(elevation))
-
 
   def clickable[A <: View](canclick: Boolean): Kestrel[A] = kestrel(_.setClickable(canclick))
   def clickable[A <: View]: Kestrel[A] = clickable[A](true)

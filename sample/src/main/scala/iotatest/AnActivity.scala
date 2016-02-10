@@ -5,9 +5,14 @@ import java.io.{File, FilenameFilter}
 import android.animation.Animator.AnimatorListener
 import android.app.Activity
 import android.net.ConnectivityManager
+import android.os.{Looper, Handler}
+import android.util.Log
 
 import android.view.{ViewGroup, View}
 import android.widget._
+
+import scala.concurrent.{ExecutionContext, Await, Future}
+
 //import iota.std._
 //import Configurations._
 //import ViewCombinators._
@@ -39,7 +44,16 @@ class AnActivity extends Activity {
   )
 //  materializeIdType
 
-  w[View] >>= k.visibility(if (true) 1 else 2)
+  import iota.std.MainThreadExecutionContext
+  val x = w[TextView] >>= k.visibility(if (true) 1 else 2) >>=
+    animate(_.alpha(0)) >>= defer(k.text("Alpha 0")) >>=
+    deferF(animate(_.alpha(1))) >>= defer(k.text("Alpha 1"))
+
+  w[Button] >>= k.text("Click Me") >>= hook.onClick { v: View =>
+    IO(v.asInstanceOf[TextView]) >>=
+      animate(_.alpha(0)) >>= defer(k.text("Alpha 0")) >>=
+      deferF(animate(_.alpha(1))) >>= defer(k.text("Alpha 1"))
+  }
 
   w[TextView] >>= k.textAppearance(if (true) new AnActivity else new Foobar, if (true) 1 else 2)
 
@@ -137,6 +151,30 @@ object Main extends App {
 
   println((IO(new StringBuilder) >>= k.append("Foo")).perform())
 
+  import scala.concurrent.ExecutionContext.Implicits.global
+  def ioSleep[A]: A => IO[Future[A]] = a => IO {
+    println("Huh")
+    Future {
+      Thread.sleep(1000)
+      println("Slept")
+      a
+    }
+  }
+  def tap[A]: Kestrel[A] = kestrel { a =>
+    println("tap: " + a)
+  }
+
+  val result =
+    IO("hi") >>= tap >>= ioSleep >>= { a => IO {
+      a.map(_ + ", there")
+    }} >>= defer(tap) >>= { a => IO {
+      a.map(_ + ", ok?")
+    }} >>= defer(tap) >>=
+      deferF(ioSleep) >>= { a => IO {
+      println("hm?")
+      a.map(_ + " bye!")
+    }} >>= defer(tap)
+  println("got result: " + result.perform())
   val filter = single[FilenameFilter].accept { (d: File, f: String) => println("HI" + f); true }
   new File("/").listFiles(filter)
   new File("/").listF(s => { println("Found: " + s); true })

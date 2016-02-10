@@ -43,13 +43,18 @@ All compositions are functions, no special classes.
   implements a type-safe `systemService[T]` lookup
 * `Configurations._` - has functions for detecting the current configuration:
   `sw(smallest-width)`, `v(version)`, `landscape` and `portrait`
+* `FutureCombinators._` - defines combinators `defer` and `deferF` for working
+  with `IO[Future[A]]`
 * `LayoutCombinators._` - has `margins`, `lp` and `lpK` functions for working
   with layout params
-* `ViewCombinators._` - generic `View` manipulation, backgrounds, id, `hook*`
-  event handlers, `backgroundResource`, etc.
+* `ViewCombinators._` - generic `View` manipulation, id, `hook*`, animate, etc.
+* `ViewCombinatorExtras._` - more generic `View` manipualation, backgrounds,
+  visibility, etc.
 * `TextCombinators._` - `TextView` manipulators, for `text`, `inputType`,
   `hint` and others
 * `ImageCombinators._` - set `imageResource` and `imageScale` for `ImageView`s
+* `MainThreadExecutionContext` - an `ExecutionContext` for working with
+  `Future`s that should execute their callbacks on the UI thread
 
 ## Example
 
@@ -83,9 +88,14 @@ class MyActivity extends Activity {
   // use a view holder pattern, such as the declaration below, for optimal static safety
   lazy val button2 = new Button(this)
   val layout = l[LinearLayout](
-    w[Button] >>= k.text("Click Me") >>= hook0.onClick(IO {
-      Toast.makeText(this, "The button was clicked", Toast.LENGTH_SHORT).show()
-    }) >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f),
+    w[Button] >>= k.text("Click Me") >>= hook.onClick { v: View =>
+      // this example will animate the button's alpha to transparent and back upon click
+      // the text will change to "Alpha 0" when the first animation completes, and will
+      // change to "Alpha 1" when the second animation completes
+      IO(v.asInstanceOf[TextView]) >>=
+        animate(_.alpha(0)) >>= defer(k.text("Alpha 0")) >>=
+        deferF(animate(_.alpha(1))) >>= defer(k.text("Alpha 1"))
+    } >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f),
     IO(button2) >>= button2Adjustments >>= id(Id.button2),
     w[ListView] >>= lp(WRAP_CONTENT, WRAP_CONTENT, 1.0f) >>=
       hookM.scroll.onScrollStateChanged((list: AbsListView, state: Int) => IO {

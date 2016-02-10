@@ -17,6 +17,7 @@ private[iota] trait AllComponents
   with Contexts
   with Themes
   with Configurations
+  with FutureCombinators
   with ViewCombinators
   with LayoutCombinators
 }

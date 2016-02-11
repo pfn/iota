@@ -15,7 +15,7 @@ class IO[+A] private(val perform: () => A) {
   def >>=[B](f: A => IO[B]): IO[B] = IO(f(perform()).perform())
 
   /** execute side-effects on UI thread */
-  def performMain(): Future[A] = Future(perform())(MainThreadExecutionContext)
+  def performMain(): Future[A] = Future(perform())(std.MainThreadExecutionContext)
 }
 
 object IO {
@@ -33,8 +33,3 @@ object IO {
   }
 }
 
-private[iota] object MainThreadExecutionContext extends ExecutionContext {
-  private[this] lazy val handler = new Handler(Looper.getMainLooper)
-  override def execute(runnable: Runnable) = handler.post(runnable)
-  override def reportFailure(t: Throwable) = Log.e("IOTA", t.getMessage, t)
-}

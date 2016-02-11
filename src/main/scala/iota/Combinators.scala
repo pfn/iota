@@ -26,10 +26,17 @@ private[iota] trait Combinators {
 }
 
 private[iota] trait FutureCombinators {
+  /** K-combinators cannot be applied directly to `IO[Future[A]]` using `>>=`,
+    * wrapping them in `defer()` makes this possible.
+    */
   def defer[A](f: Kestrel[A])(implicit ec: ExecutionContext): Future[A] => IO[Future[A]] = future => IO {
     future.map(a => f(a).perform())
   }
 
+  /** Any subsequent asynchronous operations that need to run (`>>=`) after an
+    * `IO[Future[A]]` should be wrapped in `deferF()` to keep the proper
+    * `IO[Future[A]]` type.
+    */
   def deferF[A](f: A => IO[Future[A]])(implicit ec: ExecutionContext): Future[A] => IO[Future[A]] = future => IO {
     future.flatMap(a => f(a).perform())
   }

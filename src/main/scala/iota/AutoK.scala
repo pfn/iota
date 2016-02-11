@@ -54,7 +54,8 @@ private[iota] class AutoKMacro[C <: Context](val c: C) extends Internal210 {
       tp.member(newTermName(s"set${e.capitalize}"))
     }.flatMap(checkNoSymbol).recover { case x =>
       tp.member(newTermName(e))
-    }.getOrElse(c.abort(c.enclosingPosition, s"no method for $e found in $tp"))
+    }.flatMap(checkNoSymbol).getOrElse(
+      c.abort(c.enclosingPosition, s"no method for $e found in $tp"))
     r
   }
   def applyK[V: c.WeakTypeTag,A](method: c.Expr[String])(args: Seq[c.Expr[Any]]): c.Expr[Kestrel[V]] = {

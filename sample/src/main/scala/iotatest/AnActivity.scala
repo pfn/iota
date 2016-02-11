@@ -5,13 +5,11 @@ import java.io.{File, FilenameFilter}
 import android.animation.Animator.AnimatorListener
 import android.app.Activity
 import android.net.ConnectivityManager
-import android.os.{Looper, Handler}
-import android.util.Log
 
 import android.view.{ViewGroup, View}
 import android.widget._
 
-import scala.concurrent.{ExecutionContext, Await, Future}
+import scala.concurrent.Future
 
 //import iota.std._
 //import Configurations._

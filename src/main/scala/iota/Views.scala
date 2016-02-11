@@ -19,12 +19,11 @@ private[iota] trait Views {
   /** create any android object that takes `Context` as a single constructor parameter */
   def w[A](implicit ctx: AndroidContext): IO[A] = macro ViewMacros.w[A]
 
-  /** type inference currying helper for `c`
-    */
+  /** type inference currying helper for `c` */
   class cHelper[A <: ViewGroup] {
     def apply[B](body: B): B = macro ViewMacros.cw[A,B]
   }
-  private val chelper = new cHelper[ViewGroup]
+  private[this] val chelper = new cHelper[ViewGroup]
   /** a type-hint is required when using `lp` or `lpK` outside of `IO[ViewGroup].apply(IO[View]*)`,
     * use `c[ViewGroup](B) => B` to provide `B` with the the type hint required to use `lp` and `lpK`
     */

@@ -7,7 +7,7 @@ import android.view.{View, ViewGroup}
 import scala.concurrent.{Future, ExecutionContext}
 
 /** side-effect tracker. call `perform` to execute the side-effects within */
-class IO[+A] private(val perform: () => A) {
+final class IO[+A] private(val perform: () => A) {
   def map[B](f: A => B) = IO(f(perform()))
 
   /** alias for >>= */

@@ -53,10 +53,10 @@ object Ternary extends TernaryOps {
 object Configurations extends Configurations {
   implicit class Metrics(val size: Int) extends AnyVal {
     /** convert dp to pixel values */
-    @inline def dp(implicit ctx: Context): Int =
+    @inline final def dp(implicit ctx: Context): Int =
       (ctx.getResources.getDisplayMetrics.density * size).toInt
     /** convert sp to pixel values */
-    @inline def sp(implicit ctx: Context): Int =
+    @inline final def sp(implicit ctx: Context): Int =
       (ctx.getResources.getDisplayMetrics.scaledDensity * size).toInt
   }
 }

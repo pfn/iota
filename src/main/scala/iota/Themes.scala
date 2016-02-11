@@ -9,6 +9,7 @@ import android.util.TypedValue
   * @author pfnguyen
   */
 private[iota] trait Themes {
+  // XXX return Option[A] instead?
   /** resolve a single theme attribute */
   def resolveAttr[A](attr: Int, f: TypedValue => A)(implicit ctx: Context): A = {
     val tv = new TypedValue
@@ -20,8 +21,10 @@ private[iota] trait Themes {
   /** retrieve a set of styleable attributes */
   def styleableAttrs[A](styleable: Array[Int], f: TypedArray => A)(implicit context: Context): A = {
     val themeAttrs = context.getTheme.obtainStyledAttributes(styleable)
-    val c = f(themeAttrs)
-    themeAttrs.recycle()
-    c
+    try {
+      f(themeAttrs)
+    } finally {
+      themeAttrs.recycle()
+    }
   }
 }

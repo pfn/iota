@@ -35,19 +35,19 @@ private[iota] trait Configurations {
   }
 
   /** smallest width checker */
-  @inline def sw(widthPx: Int)(implicit c: Context) = {
+  @inline final def sw(widthPx: Int)(implicit c: Context) = {
     val p = getDisplaySize
     widthPx <= p.x && widthPx <= p.y
   }
 
   /** version checker, at least `minVersion` => true */
-  @inline def v(minVersion: Int) = Build.VERSION.SDK_INT >= minVersion
+  @inline final def v(minVersion: Int) = Build.VERSION.SDK_INT >= minVersion
 
   /** orientation checker, true if landscape */
-  @inline def landscape(implicit c: Context) =
+  @inline final def landscape(implicit c: Context) =
     c.getResources.getConfiguration.orientation == Configuration.ORIENTATION_LANDSCAPE
   /** orientation checker, true if portrait */
-  @inline def portrait(implicit c: Context) =
+  @inline final def portrait(implicit c: Context) =
     c.getResources.getConfiguration.orientation == Configuration.ORIENTATION_PORTRAIT
 }
 

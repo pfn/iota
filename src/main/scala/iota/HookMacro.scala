@@ -10,97 +10,106 @@ private[iota] object HookMacro {
     val helper = new HookMacro[c.type](c)
     helper.applyHook0(event)(handler)
   }
+
   def applyHookM0[V: c.WeakTypeTag](c: Context)(event: c.Expr[String])(handler: c.Expr[IO[Any]]): c.Expr[Kestrel[V]] = {
     val helper = new HookMacro[c.type](c)
     helper.applyHookM0(event)(handler)
   }
+
   def applyHook[V: c.WeakTypeTag](c: Context)(event: c.Expr[String])(handler: c.Expr[Any]): c.Expr[Kestrel[V]] = {
     val helper = new HookMacro[c.type](c)
     helper.applyHook(event)(handler)
   }
+
   def applyHookM[V: c.WeakTypeTag](c: Context)(event: c.Expr[String])(handler: c.Expr[Any]): c.Expr[Kestrel[V]] = {
     val helper = new HookMacro[c.type](c)
     helper.applyHookM(event)(handler)
   }
-}
 
-private[iota] class HookMacro[C <: Context](val c: C) extends ListenerMacros[C] {
-  private val OBJECT_FUNCTIONS = Set("clone", "toString", "hashCode", "equals", "finalize")
-  import c.universe._
+  private[iota] class HookMacro[C <: Context](val c: C) extends ListenerMacros[C] {
+    private val OBJECT_FUNCTIONS = Set("clone", "toString", "hashCode", "equals", "finalize")
 
-  def callbackPartsFor[V : c.WeakTypeTag](e: String, methodName: Option[String] = None) = {
-    val tp = weakTypeOf[V]
-    val setter = util.Try {
-      tp.member(newTermName(s"setOn${e.capitalize}Listener")).asMethod
-    }.recover { case _ =>
-      tp.member(newTermName(s"addOn${e.capitalize}Listener")).asMethod
-    }.recover { case _ =>
-      tp.member(newTermName(s"set${e.capitalize}Listener")).asMethod
-    }.recover { case _ =>
-      tp.member(newTermName(s"add${e.capitalize}Listener")).asMethod
-    }.recover { case _ =>
-      tp.member(newTermName(s"set${e.capitalize}")).asMethod
-    }.recover { case _ =>
-      tp.member(newTermName(e)).asMethod
-    }.getOrElse(c.abort(c.enclosingPosition, s"no event listener for $e found in $tp"))
-    val listener = setter.paramss.head.head.typeSignature
+    import c.universe._
 
-    val onMethod = methodName getOrElse e
-    val on = util.Try {
-      listener.member(newTermName(onMethod)).asMethod
-    }.recover { case _ =>
-      listener.member(newTermName("on" + onMethod.capitalize)).asMethod
-    } getOrElse {
-      c.abort(c.enclosingPosition, s"Unsupported event listener class in $setter (no method '$onMethod' in $listener)")
+    def callbackPartsFor[V: c.WeakTypeTag](e: String, methodName: Option[String] = None) = {
+      val tp = weakTypeOf[V]
+      val setter = util.Try {
+        tp.member(newTermName(s"setOn${e.capitalize}Listener")).asMethod
+      }.recover { case _ =>
+        tp.member(newTermName(s"addOn${e.capitalize}Listener")).asMethod
+      }.recover { case _ =>
+        tp.member(newTermName(s"set${e.capitalize}Listener")).asMethod
+      }.recover { case _ =>
+        tp.member(newTermName(s"add${e.capitalize}Listener")).asMethod
+      }.recover { case _ =>
+        tp.member(newTermName(s"set${e.capitalize}")).asMethod
+      }.recover { case _ =>
+        tp.member(newTermName(e)).asMethod
+      }.getOrElse(c.abort(c.enclosingPosition, s"no event listener for $e found in $tp"))
+      val listener = setter.paramss.head.head.typeSignature
+
+      val onMethod = methodName getOrElse e
+      val on = util.Try {
+        listener.member(newTermName(onMethod)).asMethod
+      }.recover { case _ =>
+        listener.member(newTermName("on" + onMethod.capitalize)).asMethod
+      } getOrElse {
+        c.abort(c.enclosingPosition, s"Unsupported event listener class in $setter (no method '$onMethod' in $listener)")
+      }
+      // hack for partially implemented listeners, until we move to 2.11 only and can use isAbstract
+      val toImplement = if (!listener.typeSymbol.asClass.isAbstractClass) Nil
+      else listener.members.collect {
+        case m: MethodSymbol if !m.isFinal && m.isJava && !m.isConstructor && !OBJECT_FUNCTIONS(m.name.encoded) && m.name.encoded != on.name.encoded =>
+          m
+      }
+
+      (setter, listener, on, toImplement.toList)
     }
-    // hack for partially implemented listeners, until we move to 2.11 only and can use isAbstract
-    val toImplement = if (!listener.typeSymbol.asClass.isAbstractClass) Nil else listener.members.collect {
-      case m: MethodSymbol if !m.isFinal && m.isJava && !m.isConstructor && !OBJECT_FUNCTIONS(m.name.encoded) && m.name.encoded != on.name.encoded =>
-        m
+
+    def applyHook0[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[IO[Any]]): c.Expr[Kestrel[V]] = {
+      val Expr(Literal(Constant(e: String))) = event
+      val (setter, listener, on, toOverride) = callbackPartsFor(e)
+      val anon = newListenerClass(listener, on, handler.tree, toOverride, false)
+      c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
     }
 
-    (setter, listener, on, toImplement.toList)
-  }
-  def applyHook0[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[IO[Any]]): c.Expr[Kestrel[V]] = {
-    val Expr(Literal(Constant(e: String))) = event
-    val (setter, listener, on, toOverride) = callbackPartsFor(e)
-    val anon = newListenerClass(listener, on, handler.tree, toOverride, false)
-    c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
-  }
-  def applyHookM0[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[IO[Any]]): c.Expr[Kestrel[V]] = {
-    val Literal(Constant(outer: String)) = c.prefix.tree.collect { case Apply(n, xs) => xs }.head.last
-    val Expr(Literal(Constant(e: String))) = event
-    val (setter, listener, on, toOverride) = callbackPartsFor(outer, Option(e))
+    def applyHookM0[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[IO[Any]]): c.Expr[Kestrel[V]] = {
+      val Literal(Constant(outer: String)) = c.prefix.tree.collect { case Apply(n, xs) => xs }.head.last
+      val Expr(Literal(Constant(e: String))) = event
+      val (setter, listener, on, toOverride) = callbackPartsFor(outer, Option(e))
 
-    val anon = newListenerClass(listener, on, handler.tree, toOverride)
-    c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
-  }
-  def applyHook[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[Any]): c.Expr[Kestrel[V]] = {
-    val Expr(Literal(Constant(e: String))) = event
-    val (setter, listener, on, toOverride) = callbackPartsFor(e)
-    val anon = newListenerClass(listener, on, handler.tree, toOverride, true)
-    c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
-  }
-  def applyHookM[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[Any]): c.Expr[Kestrel[V]] = {
-    val Literal(Constant(outer: String)) = c.prefix.tree.collect { case Apply(n, xs) => xs }.head.last
-    val Expr(Literal(Constant(e: String))) = event
-    val (setter, listener, on, toOverride) = callbackPartsFor(outer, Option(e))
+      val anon = newListenerClass(listener, on, handler.tree, toOverride)
+      c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
+    }
 
-    val anon = newListenerClass(listener, on, handler.tree, toOverride, true)
-    c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
-  }
+    def applyHook[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[Any]): c.Expr[Kestrel[V]] = {
+      val Expr(Literal(Constant(e: String))) = event
+      val (setter, listener, on, toOverride) = callbackPartsFor(e)
+      val anon = newListenerClass(listener, on, handler.tree, toOverride, true)
+      c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
+    }
 
-  def newKestrel(tpe: Type, method: String, handler: Tree) = {
-    val vparam = c.fresh()
-    Apply(
-      Select(Ident(newTermName("iota")), newTermName("kestrel")),
-      List(
-        Function(
-          List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
-          Apply(Select(Ident(newTermName(vparam)), newTermName(method)), List(handler))
+    def applyHookM[V: c.WeakTypeTag](event: c.Expr[String])(handler: c.Expr[Any]): c.Expr[Kestrel[V]] = {
+      val Literal(Constant(outer: String)) = c.prefix.tree.collect { case Apply(n, xs) => xs }.head.last
+      val Expr(Literal(Constant(e: String))) = event
+      val (setter, listener, on, toOverride) = callbackPartsFor(outer, Option(e))
+
+      val anon = newListenerClass(listener, on, handler.tree, toOverride, true)
+      c.Expr[Kestrel[V]](newKestrel(weakTypeOf[V], setter.name.encoded, anon))
+    }
+
+    def newKestrel(tpe: Type, method: String, handler: Tree) = {
+      val vparam = c.fresh()
+      Apply(
+        Select(Ident(newTermName("iota")), newTermName("kestrel")),
+        List(
+          Function(
+            List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
+            Apply(Select(Ident(newTermName(vparam)), newTermName(method)), List(handler))
+          )
         )
       )
-    )
+    }
   }
 }
 

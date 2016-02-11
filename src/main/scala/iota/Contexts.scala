@@ -48,7 +48,7 @@ private[iota] trait Contexts {
   /** type-safe retrieval of system service objects.
     * e.g. `systemService[NotificationManager]`
     */
-  @inline def systemService[T](implicit s: SystemService[T], context: AndroidContext): T =
+  @inline final def systemService[T](implicit s: SystemService[T], context: AndroidContext): T =
     context.getSystemService(s.name).asInstanceOf[T]
 }
 private[iota] object ContextMacro {

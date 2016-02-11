@@ -147,7 +147,7 @@ private[iota] trait LayoutCombinators {
   /** set margins on a `LayoutParams`,
     *  e.g. `lpK(MATCH_PARENT, MATCH_PARENT)(margins(all = 4.dp))`
     */
-  def margins(left:   Int = 0,
+  final def margins(left:   Int = 0,
               top:    Int = 0,
               right:  Int = 0,
               bottom: Int = 0,
@@ -169,7 +169,7 @@ private[iota] trait LayoutCombinators {
     * `lp(MATCH_PARENT, MATCH_PARENT)`
     */
   @compileTimeOnly("lp can only be used from IO[_ <: ViewGroup].apply() or c[_ <: ViewGroup]()")
-  def lp[V <: View](args: Any*): Kestrel[V] = ???
+  final def lp[V <: View,A](args: A*): Kestrel[V] = ???
 
   @compileTimeOnly("lpK can only be used from IO[_ <: ViewGroup].apply() or c[_ <: ViewGroup]()")
   /** K-combinator for LayoutParams, e.g.
@@ -178,7 +178,7 @@ private[iota] trait LayoutCombinators {
     *    p.marginTop = 10.dp
     *  }
     *  ``` */
-  def lpK[V <: View,A,B](args: Any*)(k: A => B): Kestrel[V] = ???
+  final def lpK[V <: View,A,B,C](args: C*)(k: A => B): Kestrel[V] = ???
 }
 
 private[iota] trait TextCombinators {

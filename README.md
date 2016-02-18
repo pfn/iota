@@ -4,11 +4,12 @@ A small, an iota, side-effect tracking library and layout DSL
 
 ## add to your build
 
-`libraryDependencies += "com.hanhuy.android" %% "iota" % "1.0.2"`
+`libraryDependencies += "com.hanhuy.android" %% "iota" % "1.0.3"`
 
-Clear proguard warnings, these will not cause any runtime crashes
+Clear proguard warnings, these will not cause any runtime crashes (scala 2.10
+macro backward compat support)
 
-`proguardOptions += "-dontwarn iota.**"`
+`proguardOptions += "-dontwarn iota.Internal210**"`
 
 ## Usage
 

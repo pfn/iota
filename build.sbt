@@ -12,7 +12,7 @@ lazy val macros = project.settings(
 lazy val root = project.in(file(".")).settings(
   mappings in (Compile,packageBin) <++= mappings in (macros,Compile,packageBin),
   scalacOptions in Compile += "-language:experimental.macros"
-).dependsOn(macros % "provided").settings(buildWith(macros):_*)
+).dependsOn(macros % "compile-internal").settings(buildWith(macros):_*)
 
 lazy val sample = project.settings(androidBuildJar: _*).settings(
   platformTarget := platform,

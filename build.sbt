@@ -3,7 +3,7 @@ val platform = "android-21"
 lazy val macros = project.settings(
   platformTarget := platform,
   crossScalaVersions += "2.11.7",
-  libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+  libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
   exportJars := true,
   scalacOptions in Compile += "-language:experimental.macros"
@@ -30,13 +30,13 @@ name := "iota"
 
 organization := "com.hanhuy.android"
 
-version := "1.0.3"
+version := "1.0.4-SNAPSHOT"
 
 platformTarget := platform
 
 crossScalaVersions += "2.11.7"
 
-libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
 

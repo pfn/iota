@@ -12,7 +12,8 @@ package object std {
 
   /** UI execution context, use with combinators such as `defer` and `deferF`
     */
-  implicit object MainThreadExecutionContext extends ExecutionContext {
+  // https://bitbucket.org/snippets/atlassianlabs/pLMry#file-no-implicit-objects.md
+  implicit val MainThreadExecutionContext: ExecutionContext = new ExecutionContext {
     private[this] lazy val handler = new Handler(Looper.getMainLooper)
     override def execute(runnable: Runnable) = handler.post(runnable)
     override def reportFailure(t: Throwable) = Log.e("IOTA", t.getMessage, t)

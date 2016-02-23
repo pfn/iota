@@ -36,7 +36,10 @@ platformTarget := platform
 
 crossScalaVersions += "2.11.7"
 
-libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+  case Some((2, 10)) => "org.scala-lang" % "scala-reflect" % scalaVersion.value :: Nil
+  case _ => Nil
+})
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
 

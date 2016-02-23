@@ -55,6 +55,7 @@ private[iota] object ContextMacro {
   private[this] val TYPES =
     "android.app.Context" ::
     "android.app.Fragment" ::
+    "android.view.View" ::
     "android.support.v4.app.Fragment" ::
     "iota.WithContext" ::
     Nil

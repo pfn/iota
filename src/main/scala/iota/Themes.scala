@@ -1,9 +1,8 @@
 package iota
 
-import android.app.Activity
 import android.content.Context
 import android.content.res.TypedArray
-import android.util.TypedValue
+import android.util.{AttributeSet, TypedValue}
 
 /**
   * @author pfnguyen
@@ -18,9 +17,18 @@ private[iota] trait Themes {
       f(tv)
     } else throw new IllegalStateException("attribute not found: " + attr)
   }
-  /** retrieve a set of styleable attributes */
+  /** retrieve a set of styled theme attributes */
   def styleableAttrs[A](styleable: Array[Int], f: TypedArray => A)(implicit context: Context): A = {
     val themeAttrs = context.getTheme.obtainStyledAttributes(styleable)
+    try {
+      f(themeAttrs)
+    } finally {
+      themeAttrs.recycle()
+    }
+  }
+  /** retrieve a styled attributeset */
+  def styledAttrs[A](attrs: AttributeSet, styleable: Array[Int], f: TypedArray => A)(implicit context: Context): A = {
+    val themeAttrs = context.obtainStyledAttributes(attrs, styleable)
     try {
       f(themeAttrs)
     } finally {

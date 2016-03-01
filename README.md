@@ -4,7 +4,7 @@ A small, an iota, side-effect tracking library and layout DSL
 
 ## add to your build
 
-`libraryDependencies += "com.hanhuy.android" %% "iota" % "1.0.3"`
+`libraryDependencies += "com.hanhuy.android" %% "iota" % "1.0.4"`
 
 Clear proguard warnings, these will not cause any runtime crashes (scala 2.10
 macro backward compat support)

@@ -177,3 +177,20 @@ object Main extends App {
   new File("/").listFiles(filter)
   new File("/").listF(s => { println("Found: " + s); true })
 }
+
+case class Bugger(container: LinearLayout, text: TextView, b2: foo.Bugger2) extends ViewTree[LinearLayout]
+object AnotherTest {
+  case class Simple(container: LinearLayout, text: TextView) extends ViewTree[LinearLayout]
+  val aSimple: Simple = ViewTree.inflate(null, Simple)
+
+  case class NestedItem(container: FrameLayout, text: TextView) extends ViewTree[FrameLayout]
+  case class Nested1(container: LinearLayout, b: Bugger) extends ViewTree[LinearLayout]
+  case class Nested(container: LinearLayout, text: TextView, sub: NestedItem) extends ViewTree[LinearLayout]
+  val aNested: Nested = ViewTree.inflate(null, Nested)
+  val aNested1 = ViewTree.inflate(null, Nested1)
+  val bugger = ViewTree.inflate(null, Bugger)
+}
+
+package foo {
+  case class Bugger2(container: LinearLayout, text: TextView) extends ViewTree[LinearLayout]
+}

@@ -85,7 +85,7 @@ private[iota] object SingleMacro {
           m
       }
 
-      val on = e.fold(toImplement.head) { x =>
+      val on = e.map { x =>
         val onMethod = x
         util.Try {
           listener.member(newTermName(onMethod)).asMethod
@@ -94,7 +94,9 @@ private[iota] object SingleMacro {
         } getOrElse {
           c.abort(c.enclosingPosition, s"Unsupported event listener (no method '$onMethod' in $listener)")
         }
-      }
+      }.orElse(toImplement.headOption).getOrElse(
+        c.abort(c.enclosingPosition, s"Cannot identify type to implement")
+      )
 
       (listener, on, toImplement.toList filter (_.name.encoded != on.name.encoded))
     }

@@ -85,8 +85,9 @@ private[iota] object ViewTreeMacro {
 
             (sel :: a, vgadd ++ (newvt :: add), vg)
           } else {
-            c.abort(in.pos,
-              s"ViewTree parameter '${in.name}: $t' is not supported,\n" +
+            val container = Option(inflater.tree.symbol).fold("<anon>")(_.fullName)
+            c.abort(inflater.tree.pos,
+              s"parameter '${in.name}: $t' in $container is not supported,\n" +
                 "only android.view.View and iota.ViewTree subclasses are allowed")
           }
       }

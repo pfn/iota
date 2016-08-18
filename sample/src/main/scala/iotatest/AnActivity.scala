@@ -5,8 +5,7 @@ import java.io.{File, FilenameFilter}
 import android.animation.Animator.AnimatorListener
 import android.app.Activity
 import android.net.ConnectivityManager
-
-import android.view.{ViewGroup, View}
+import android.view.{Gravity, View, ViewGroup}
 import android.widget._
 
 import scala.concurrent.Future
@@ -180,7 +179,19 @@ object Main extends App {
 
 case class Bugger(container: LinearLayout, text: TextView, b2: foo.Bugger2) extends ViewTree[LinearLayout]
 object AnotherTest {
-  case class Simple(container: LinearLayout, text: TextView) extends ViewTree[LinearLayout]
+  import ViewGroup.LayoutParams._
+  case class Simple(container: LinearLayout, text: TextView) extends ViewTree[LinearLayout] {
+    text.lp(MATCH_PARENT, MATCH_PARENT)
+    text.linearLayoutGravity(Gravity.TOP)
+    text.marginTop(15)
+  }
+  case class SimpleRelative(container: RelativeLayout, text1: TextView, text2: TextView) extends ViewTree[RelativeLayout] {
+    text1.above(text2)
+    text1.endOf(text2)
+    text1.alignParentEnd()
+    text1.alignParentBottom()
+    text1.alignWithParentIfMissing()
+  }
   val aSimple: Simple = ViewTree.inflate(null, Simple)
 
   case class NestedItem(container: FrameLayout, text: TextView) extends ViewTree[FrameLayout]
@@ -192,5 +203,5 @@ object AnotherTest {
 }
 
 package foo {
-  case class Bugger2(container: LinearLayout, text: TextView) extends ViewTree[LinearLayout]
+  case class Bugger2(container: LinearLayout, text: TextView, str: Option[String]) extends ViewTree[LinearLayout]
 }

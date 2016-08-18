@@ -23,7 +23,7 @@ private[iota] object IOViewGroupMacro {
     }
     def applyVGImpl[A <: ViewGroup : c.WeakTypeTag](vg: Tree, body: Seq[c.Expr[IO[_ <: View]]]): c.Expr[IO[A]] = {
       val transformer = new LpTransformer[c.type](c)
-      val lpType = transformer.lpTypeOf(weakTypeOf[A])
+      val lpType = lpTypeOf(c)(weakTypeOf[A])
 
       val x: c.Expr[Seq[IO[_ <: View]]] = sequence(c)(
         body.map (b => c.Expr[IO[_ <: View]](transformer.transform(lpType.toType, b.tree)))
@@ -44,16 +44,17 @@ private[iota] object IOViewGroupMacro {
     }
   }
 
+  def lpTypeOf(c: Context)(tpe: c.Type) = tpe.baseClasses.flatMap { base =>
+    val clsname = base.asClass.fullName
+    val lpname = clsname + (if (clsname == "android.view.ViewGroup")
+      ".MarginLayoutParams" else ".LayoutParams")
+    util.Try(c.universe.rootMirror.staticClass(lpname)).toOption
+  }.headOption.getOrElse(
+    c.abort(c.enclosingPosition, tpe + " does not have a LayoutParams nested class")
+  )
+
   class LpTransformer[C <: Context](val c: C) extends Internal210 {
     import c.universe._
-    def lpTypeOf(tpe: Type) = tpe.baseClasses.flatMap { base =>
-      val clsname = base.asClass.fullName
-      val lpname = clsname + (if (clsname == "android.view.ViewGroup")
-        ".MarginLayoutParams" else ".LayoutParams")
-      util.Try(rootMirror.staticClass(lpname)).toOption
-    }.headOption.getOrElse(
-      c.abort(c.enclosingPosition, tpe + " does not have a LayoutParams nested class")
-    )
     def isInIota(id: Tree) = {
       id.symbol.owner.name.encoded == "iota" || id.symbol.owner.owner.name.encoded == "iota"
     }

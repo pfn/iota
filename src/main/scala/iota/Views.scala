@@ -53,7 +53,7 @@ private[iota] object ViewMacros {
     import c.universe._
     def cw[A <: ViewGroup : WeakTypeTag, B](body: Expr[B]): Expr[B] = {
       val transformer = new LpTransformer[c.type](c)
-      c.Expr[B](transformer.transform(transformer.lpTypeOf(weakTypeOf[A]).toType, body.tree))
+      c.Expr[B](transformer.transform(IOViewGroupMacro.lpTypeOf(c)(weakTypeOf[A]).toType, body.tree))
     }
   }
   def cw[A <: ViewGroup : c.WeakTypeTag, B](c: Context)(body: c.Expr[B]): c.Expr[B] = {

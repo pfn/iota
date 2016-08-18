@@ -49,26 +49,26 @@ private[iota] object ViewTreeMacro {
           val applySym = inflater.tree.symbol.typeSignature.member(newTermName("apply")).asMethod
           applySym.paramss.head.map(p => ValDef(Modifiers(Flag.PARAM), newTermName(p.name.toString), TypeTree(p.typeSignature), EmptyTree))
       }
-      val (args, sts, _) = inputs.zipWithIndex.foldLeft(
-        (List.empty[Tree], List.empty[Tree], Option.empty[Tree])) {
-        case ((a,add,vg),(in, i)) =>
+      def addView(vg: Tree, view: Tree): Tree =
+        Apply(Select(vg, newTermName("addView")), List(view))
+      val (args, sts, addviews, vgs) = inputs.foldLeft(
+        (List.empty[Tree], List.empty[Tree], List.empty[Tree => Tree],Option.empty[Tree])) {
+        case ((a,add,addview,vg),in) =>
           val t = in.tpt.tpe
-          if (i == 0 && t <:< vgt) {
+          if (in.name.encoded == "container" && t <:< vgt) {
             val nvg = Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil)
             val newterm = c.fresh("viewgroup")
             val newvg = ValDef(Modifiers(Flag.PARAM), newTermName(newterm), TypeTree(t), nvg)
             val sel = Ident(newTermName(newterm))
 
-            (sel :: a, newvg :: add, Some(sel))
+            (sel :: a, newvg :: add, addview, Some(sel))
           } else if (t <:< vwt) {
             val newterm = c.fresh("view")
             val sel = Ident(newTermName(newterm))
             val newv = ValDef(Modifiers(Flag.PARAM), newTermName(newterm), TypeTree(t),
               Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil))
-            val vgadd = vg.toList.map { v =>
-              Apply(Select(v, newTermName("addView")), List(sel))
-            }
-            (sel :: a, vgadd ++ (newv :: add), vg)
+            val vgadd: Tree => Tree = addView(_, sel)
+            (sel :: a, newv :: add, vgadd :: addview, vg)
           } else if (t <:< vtt) {
             val ownerTree = if (t.typeSymbol.owner.isPackage) Ident(t.typeSymbol.owner)
             else if (t.typeSymbol.owner.isClass) This(t.typeSymbol.owner)
@@ -79,11 +79,9 @@ private[iota] object ViewTreeMacro {
             val newterm = c.fresh("viewtree")
             val sel = Ident(newTermName(newterm))
             val newvt = ValDef(Modifiers(Flag.PARAM), newTermName(newterm), TypeTree(t), tree.tree)
-            val vgadd = vg.toList.map { v =>
-              Apply(Select(v, newTermName("addView")), List(Select(sel, newTermName("container"))))
-            }
+            val vgadd: Tree => Tree = addView(_, Select(sel, newTermName("container")))
 
-            (sel :: a, vgadd ++ (newvt :: add), vg)
+            (sel :: a, newvt :: add, vgadd :: addview, vg)
           } else {
             val container = Option(inflater.tree.symbol).fold("<anon>")(_.fullName)
             c.abort(inflater.tree.pos,
@@ -91,7 +89,11 @@ private[iota] object ViewTreeMacro {
                 "only android.view.View and iota.ViewTree subclasses are allowed")
           }
       }
-      c.Expr(Block(sts.reverse,
+      if (vgs.isEmpty) {
+        val container = Option(inflater.tree.symbol).fold("<anon>")(_.fullName)
+        c.abort(inflater.tree.pos, s"missing 'container' field in $container")
+      }
+      c.Expr(Block(sts.reverse ++ vgs.toList.flatMap(v => addviews.reverse.map(_.apply(v))),
         Apply(inflater.tree, args.reverse)
       ))
     }

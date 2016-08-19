@@ -89,7 +89,6 @@ private[iota] object ViewTreeMacro {
                 case e: ClassCastException =>
                   val ex = new ClassCastException(s"Failed to cast '${key.splice}' to ${tpe.splice}")
                   ex.initCause(e)
-                  ex.setStackTrace(Array.ofDim(0))
                   throw ex
               }
             }.tree

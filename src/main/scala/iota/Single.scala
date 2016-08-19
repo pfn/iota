@@ -31,7 +31,7 @@ private[iota] trait Single {
     * this version, `single`, requires all input parameters to be specified
     * and handled
     */
-  def single[A] = singlehelper.asInstanceOf[singleHelper[A]] // prevent additional allocationskk
+  def single[A] = singlehelper.asInstanceOf[singleHelper[A]] // prevent additional allocations
   /**
     * Constructs a single instance of a given abstract class or interface,
     * can optionally specify the method name if multiple methods

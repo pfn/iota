@@ -35,7 +35,7 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
   final implicit def viewLinearLayoutExtensions(v: View):   ViewLinearLayoutExtensions   = ViewLinearLayoutExtensions(v)
   final implicit def viewRelativeLayoutExtensions(v: View): ViewRelativeLayoutExtensions = ViewRelativeLayoutExtensions(v)
   final implicit def viewMarginLayoutExtensions(v: View):   ViewMarginLayoutExtensions   = ViewMarginLayoutExtensions(v)
-  final implicit def viewGravityLayoutExtensions(v: View):  ViewGravityLayoutExtensions   = ViewGravityLayoutExtensions(v)
+  final implicit def viewGravityLayoutExtensions(v: View):  ViewGravityLayoutExtensions  = ViewGravityLayoutExtensions(v)
 }
 object ViewTree {
   type Children = Either[ViewTree[_], _ <: View]

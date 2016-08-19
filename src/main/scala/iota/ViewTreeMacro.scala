@@ -18,22 +18,39 @@ private[iota] object ViewTreeMacro {
       val vgt = c.weakTypeOf[ViewGroup]
       val vwt = c.weakTypeOf[View]
       val vtt = c.weakTypeOf[ViewTree[_]]
+      val act = c.weakTypeOf[AndroidContext]
       val wtt = implicitly[WeakTypeTag[A]]
 
       val inputs = inflater.tree match {
-        case Block(_, Function(in, _)) => in
+        case Block(_, Function(in, _)) => in.map(i => (i.name,i.tpt, None))
         case TypeTree() | Select(_, _) | Ident(_) =>
           val applySym = inflater.tree.symbol.typeSignature.member(newTermName("apply")).asMethod
-          applySym.paramss.head.map(p =>
-            ValDef(Modifiers(Flag.PARAM), newTermName(p.name.toString), TypeTree(p.typeSignature), EmptyTree))
+          // handle default parameters
+          applySym.paramss.head.zipWithIndex.map { case (p,i) =>
+            (newTermName(p.name.encoded), TypeTree(p.typeSignature),
+              if (p.asTerm.isParamWithDefault) {
+                import scala.reflect.internal.{Definitions, SymbolTable, StdNames}
+                val u = c.universe.asInstanceOf[Definitions with SymbolTable with StdNames]
+                val getter = u.nme.defaultGetterName(u.newTermName("apply"), i + 1)
+                Option(Select(Ident(inflater.tree.symbol), newTermName(getter.encoded)))
+              }
+              else None
+            )
+          }
       }
       def addView(vg: Tree, view: Tree): Tree =
         Apply(Select(vg, newTermName("addView")), List(view))
       val (args, sts, addviews, vgs) = inputs.foldLeft(
         (List.empty[Tree], List.empty[Tree], List.empty[Tree => Tree],Option.empty[Tree])) {
-        case ((a,add,addview,vg),in) =>
-          val t = in.tpt.tpe
-          if (in.name.encoded == "container" && t <:< vgt) {
+        case ((a,add,addview,vg),(inn,int,deft)) =>
+          val t = int.tpe
+          if (deft.nonEmpty) {
+            val newterm = newTermName(c.fresh("defview"))
+            val sel = Ident(newterm)
+            val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), deft.get)
+            val vgadd: Tree => Tree = addView(_, sel)
+            (sel :: a, newv :: add, vgadd :: addview, vg)
+          } else if (inn.encoded == "container" && t <:< vgt) {
             val nvg = Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil)
             val newterm = newTermName(c.fresh("viewgroup"))
             val newvg = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), nvg)
@@ -47,6 +64,8 @@ private[iota] object ViewTreeMacro {
               Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil))
             val vgadd: Tree => Tree = addView(_, sel)
             (sel :: a, newv :: add, vgadd :: addview, vg)
+          } else if (t =:= act) { // inject a context parameter into arg list if requested
+            (ctx.tree :: a, add, addview, vg)
           } else if (t <:< vtt) {
             val ownerTree = if (t.typeSymbol.owner.isPackage) Ident(t.typeSymbol.owner)
             else if (t.typeSymbol.owner.isClass) This(t.typeSymbol.owner)
@@ -70,7 +89,7 @@ private[iota] object ViewTreeMacro {
           } else {
             val container = Option(inflater.tree.symbol).fold("<anon>")(_.fullName)
             c.abort(inflater.tree.pos,
-              s"parameter '${in.name}: $t' in $container is not supported, " +
+              s"parameter '$inn: $t' in $container is not supported, " +
                 "only android.view.View and iota.ViewTree subclasses are allowed")
           }
       }

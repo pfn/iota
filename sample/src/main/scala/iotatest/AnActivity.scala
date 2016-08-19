@@ -185,7 +185,7 @@ object AnotherTest {
     text.linearLayoutGravity(Gravity.TOP)
     text.marginTop(15)
   }
-  case class SimpleRelative(container: RelativeLayout, text1: TextView, text2: TextView) extends ViewTree[RelativeLayout] {
+  case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = new TextView(null, null, 0), text2: TextView) extends ViewTree[RelativeLayout] {
     text1.above(text2)
     text1.endOf(text2)
     text1.alignParentEnd()
@@ -193,6 +193,7 @@ object AnotherTest {
     text1.alignWithParentIfMissing()
   }
   val aSimple: Simple = ViewTree.inflate(null, Simple)
+  val r = ViewTree.inflate(null, SimpleRelative)
 
   case class NestedItem(container: FrameLayout, text: TextView) extends ViewTree[FrameLayout]
   case class Nested1(container: LinearLayout, b: Bugger) extends ViewTree[LinearLayout]

@@ -30,27 +30,34 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
 
   val container: A
 
+  def wrap[Z <: ViewGroup](v: View)(f: Z => Any): Unit = ???
+
   // implicits to allow implementations to access DSL
   final implicit def viewLayoutExtensions(v: View):         ViewLayoutExtensions         = ViewLayoutExtensions(v)
   final implicit def viewLinearLayoutExtensions(v: View):   ViewLinearLayoutExtensions   = ViewLinearLayoutExtensions(v)
-  final implicit def viewFrameLayoutExtensions(v: View):    ViewFrameLayoutExtensions    = ViewFrameLayoutExtensions(v)
   final implicit def viewRelativeLayoutExtensions(v: View): ViewRelativeLayoutExtensions = ViewRelativeLayoutExtensions(v)
   final implicit def viewMarginLayoutExtensions(v: View):   ViewMarginLayoutExtensions   = ViewMarginLayoutExtensions(v)
+  final implicit def viewGravityLayoutExtensions(v: View):  ViewGravityLayoutExtensions   = ViewGravityLayoutExtensions(v)
 }
 object ViewTree {
   type Children = Either[ViewTree[_], _ <: View]
   trait LayoutConstraint[A <: ViewGroup] extends Any
+  /** a second layout type constraint, `OR`d with any other `LayoutConstraint` */
+  trait LayoutConstraint2[A <: ViewGroup] extends Any
   trait LayoutParamConstraint[A <: ViewGroup.LayoutParams] extends Any
   import android.widget._
   case class ViewLayoutExtensions(v: View) extends AnyVal {
+    /** construct LayoutParams for the correct type with the specified arguments.
+      * If `lp` is not called, any layout decorator call will insert default
+      * LayoutParams. Default LayoutParams have WRAP_CONTENT for both width and height
+      */
     def lp(args: Any*) = macro ViewTreeMacro.lp
   }
-  case class ViewLinearLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[LinearLayout] {
-    def linearLayoutGravity(value: Int): Unit = macro ViewTreeMacro.layoutParamField
-    def weight(value: Float):            Unit = macro ViewTreeMacro.layoutParamField
+  case class ViewGravityLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[LinearLayout] with LayoutConstraint2[FrameLayout] {
+    def gravity(value: Int): Unit = macro ViewTreeMacro.layoutParamField
   }
-  case class ViewFrameLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[FrameLayout] {
-    def frameLayoutGravity(value: Int): Unit = macro ViewTreeMacro.layoutParamField
+  case class ViewLinearLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[LinearLayout] {
+    def weight(value: Float):            Unit = macro ViewTreeMacro.layoutParamField
   }
   case class ViewMarginLayoutExtensions(v: View) extends AnyVal with LayoutParamConstraint[ViewGroup.MarginLayoutParams] {
     // would like a margins(t,l,r,b) but macros don't support default/named args

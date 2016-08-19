@@ -38,8 +38,18 @@ private[iota] object ViewTreeMacro {
             )
           }
       }
-      def addView(vg: Tree, view: Tree): Tree =
-        Apply(Select(vg, newTermName("addView")), List(view))
+      def addView(vg: Tree, view: Tree): Tree = {
+        val v = c.Expr[View](view)
+        val g = c.Expr[ViewGroup](vg)
+        val a = c.Expr[Unit](Apply(Select(vg, newTermName("addView")), List(view)))
+        // support the possibility of adding an anonymous level in the view hierarchy
+        reify {
+          if (v.splice.getParent != null && v.splice.getParent != g.splice)
+            g.splice.addView(v.splice.getParent.asInstanceOf[ViewGroup])
+          else
+            a.splice
+        }.tree
+      }
       val (args, sts, addviews, vgs) = inputs.foldLeft(
         (List.empty[Tree], List.empty[Tree], List.empty[Tree => Tree],Option.empty[Tree])) {
         case ((a,add,addview,vg),(inn,int,deft)) =>
@@ -114,8 +124,7 @@ private[iota] object ViewTreeMacro {
 
   val layoutParamFieldOps = Map(
     "weight"              -> "weight",
-    "frameLayoutGravity"  -> "gravity",
-    "linearLayoutGravity" -> "gravity",
+    "gravity"             -> "gravity",
     "marginRight"         -> "rightMargin",
     "marginLeft"          -> "leftMargin",
     "marginTop"           -> "topMargin",
@@ -155,6 +164,7 @@ private[iota] object ViewTreeMacro {
     val vglpt = typeOf[ViewGroup.LayoutParams]
     val lpc = typeOf[ViewTree.LayoutParamConstraint[_]]
     val lc = typeOf[ViewTree.LayoutConstraint[_]]
+    val lc2 = typeOf[ViewTree.LayoutConstraint2[_]]
     val owner = c.macroApplication.children.head.symbol.owner
     val lpcType = owner.typeSignature.baseType(lpc.typeSymbol)
     def typeParamOf(p: Type, base: Type): Type = p.find(_ <:< base).get
@@ -162,8 +172,10 @@ private[iota] object ViewTreeMacro {
       c.abort(c.macroApplication.pos, s"$op cannot be used in $lpt only in ${typeParamOf(lpcType, vglpt)}")
     }
     val lcType = owner.typeSignature.baseType(lc.typeSymbol)
-    if (lcType != NoType && !(lt <:< typeParamOf(lcType, vgt))) {
-      c.abort(c.macroApplication.pos, s"'.$op' cannot be used in $lt only in ${typeParamOf(lcType, vgt)}")
+    val lc2Type = owner.typeSignature.baseType(lc2.typeSymbol)
+    val lcs = List(lcType, lc2Type).filter(_ != NoType).map(typeParamOf(_, vgt))
+    if (lcs.nonEmpty && !lcs.exists(lt <:< _)) {
+      c.abort(c.macroApplication.pos, s"'.$op' cannot be used in $lt only in ${lcs.mkString(" or ")}")
     }
   }
 
@@ -171,11 +183,14 @@ private[iota] object ViewTreeMacro {
     import c.universe._
     val defparams = c.Expr[ViewGroup.LayoutParams](defaultLp(c, op))
     val view = c.Expr[View](c.prefix.tree.children.last)
+    val checklptype = c.Expr[Boolean](
+      TypeApply(Select(
+        Apply(Select(view.tree, newTermName("getLayoutParams")), Nil),
+        newTermName("isInstanceOf")), List(TypeTree(lpt))))
     val ensureLp = reify {
-      val iota$generated$lp = view.splice.getLayoutParams
-      if (iota$generated$lp == null)
+      if (view.splice.getLayoutParams == null || !checklptype.splice)
         view.splice.setLayoutParams(defparams.splice)
-      iota$generated$lp
+      view.splice.getLayoutParams
     }.tree
     val vterm = newTermName(c.fresh("lp"))
     val vdef = ValDef(Modifiers(Flag.PARAM), vterm, TypeTree(lpt),
@@ -222,13 +237,11 @@ private[iota] object ViewTreeMacro {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val ensureId = reify {
-      val iota$generated$id = view.splice.getId
-      if (iota$generated$id == android.view.View.NO_ID) {
-        val iota$generated$id1 = System.identityHashCode(view.splice)
-        view.splice.setId(iota$generated$id1)
-        iota$generated$id1
+      if (view.splice.getId == android.view.View.NO_ID) {
+        view.splice.setId(System.identityHashCode(view.splice))
+        view.splice.getId
       } else
-        iota$generated$id
+        view.splice.getId
     }.tree
     val iterm = newTermName(c.fresh("id"))
     val idef = ValDef(Modifiers(Flag.PARAM), iterm, TypeTree(typeOf[Int]), ensureId)

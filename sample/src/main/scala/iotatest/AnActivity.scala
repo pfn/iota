@@ -5,6 +5,7 @@ import java.io.{File, FilenameFilter}
 import android.animation.Animator.AnimatorListener
 import android.app.Activity
 import android.net.ConnectivityManager
+import android.os.Bundle
 import android.view.{Gravity, View, ViewGroup}
 import android.widget._
 
@@ -178,29 +179,35 @@ object Main extends App {
 }
 
 case class Bugger(container: LinearLayout, text: TextView, b2: foo.Bugger2) extends ViewTree[LinearLayout]
-object AnotherTest {
+object AnotherTest extends Activity {
+
   import ViewGroup.LayoutParams._
+
+  override def onCreate(savedInstanceState: Bundle) = super.onCreate(savedInstanceState)
+
   case class Simple(container: LinearLayout, text: TextView) extends ViewTree[LinearLayout] {
     text.lp(MATCH_PARENT, MATCH_PARENT)
-    text.linearLayoutGravity(Gravity.TOP)
+    text.gravity(Gravity.TOP)
     text.marginTop(15)
   }
-  case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = new TextView(null, null, 0), text2: TextView) extends ViewTree[RelativeLayout] {
+  case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = new TextView(AnotherTest, null, 0), text2: TextView) extends ViewTree[RelativeLayout] {
     text1.above(text2)
     text1.endOf(text2)
     text1.alignParentEnd()
     text1.alignParentBottom()
     text1.alignWithParentIfMissing()
   }
-  val aSimple: Simple = ViewTree.inflate(null, Simple)
-  val r = ViewTree.inflate(null, SimpleRelative)
+  val aSimple: Simple = ViewTree.inflate(this, Simple)
+  val r = ViewTree.inflate(this, SimpleRelative)
 
-  case class NestedItem(container: FrameLayout, text: TextView) extends ViewTree[FrameLayout]
+  case class NestedItem(container: FrameLayout, text: TextView) extends ViewTree[FrameLayout] {
+    text.gravity(Gravity.CENTER)
+  }
   case class Nested1(container: LinearLayout, b: Bugger) extends ViewTree[LinearLayout]
   case class Nested(container: LinearLayout, text: TextView, sub: NestedItem) extends ViewTree[LinearLayout]
-  val aNested: Nested = ViewTree.inflate(null, Nested)
-  val aNested1 = ViewTree.inflate(null, Nested1)
-  val bugger = ViewTree.inflate(null, Bugger)
+  val aNested: Nested = ViewTree.inflate(this, Nested)
+  val aNested1 = ViewTree.inflate(this, Nested1)
+  val bugger = ViewTree.inflate(this, Bugger)
 }
 
 package foo {

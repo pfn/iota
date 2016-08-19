@@ -24,7 +24,6 @@ private[iota] object ViewTreeMacro {
     val act = c.weakTypeOf[AndroidContext]
     val wtt = implicitly[WeakTypeTag[A]]
 
-    // TODO take factory output, catch cast exceptions and re-throw with better diagnostics
     // yuck, refactor this
     val factoryVal = factoryTerm.map(t => Some(t) -> Option.empty[Tree]).getOrElse(
       factory.fold((Option.empty[TermName],Option.empty[Tree])) { f =>
@@ -35,6 +34,30 @@ private[iota] object ViewTreeMacro {
         Some(fterm) ->
           Some(ValDef(Modifiers(Flag.PARAM), fterm, TypeTree(typeOf[String => Option[View]]), ftree))
       })
+
+    def withFactory(view: Tree, t: Type, k: String): Tree = {
+      val viewExpr = c.Expr[View](view)
+      factoryVal._1.fold(view) { fact =>
+        val key = c.Expr[String](Literal(Constant((k :: prefix).reverse.mkString("."))))
+        val f = c.Expr[String => Option[View]](Ident(fact))
+        val withfactory = reify {
+          f.splice.apply(key.splice).getOrElse(viewExpr.splice)
+        }
+        val tpe = c.Expr[String](Literal(Constant(t.toString)))
+        val facOut = c.Expr[View](TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t))))
+        reify {
+          try {
+            facOut.splice
+          } catch {
+            case e: ClassCastException =>
+              val ex = new ClassCastException(s"Failed to cast '${key.splice}' to ${tpe.splice}")
+              ex.initCause(e)
+              ex.setStackTrace(Array.ofDim(0))
+              throw ex
+          }
+        }.tree
+      }
+    }
 
     val inputs = inflater.tree match {
       case Block(_, Function(in, _)) => in.map(i => (i.name,i.tpt, None))
@@ -75,15 +98,8 @@ private[iota] object ViewTreeMacro {
           val sel = Ident(newterm)
 
           val defaultView = c.Expr[View](deft.get)
-          val view = factoryVal._1.fold(defaultView.tree) { fact =>
-            val key = c.Expr[String](Literal(Constant((inn.encoded :: prefix).reverse.mkString("."))))
-            val f = c.Expr[String => Option[View]](Ident(fact))
-            val withfactory = reify {
-              f.splice.apply(key.splice).getOrElse(defaultView.splice)
-            }
-            TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t)))
-          }
-          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), view)
+          withFactory(deft.get, t, inn.encoded)
+          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), withFactory(deft.get, t, inn.encoded))
 
           val vgadd: Tree => Tree = addView(_, sel)
 
@@ -95,16 +111,9 @@ private[iota] object ViewTreeMacro {
           val newterm = newTermName(c.fresh("viewgroup"))
           val sel = Ident(newterm)
 
-          val nvg = c.Expr[ViewGroup](Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil))
-          val newvg = factoryVal._1.fold(nvg.tree) { fact =>
-            val key = c.Expr[String](Literal(Constant((inn.encoded :: prefix).reverse.mkString("."))))
-            val f = c.Expr[String => Option[View]](Ident(fact))
-            val withfactory = reify {
-              f.splice.apply(key.splice).getOrElse(nvg.splice)
-            }
-            TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t)))
-          }
-          val newvgVal = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), newvg)
+          val nvg = Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil)
+          val newvgVal = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t),
+            withFactory(nvg, t, inn.encoded))
 
           (sel :: a, newvgVal :: add, addview, Some(sel))
         } else if (t <:< vwt) {
@@ -112,16 +121,9 @@ private[iota] object ViewTreeMacro {
           val sel = Ident(newterm)
 
           val newView =
-            c.Expr[View](Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil))
-          val view = factoryVal._1.fold(newView.tree) { fact =>
-            val key = c.Expr[String](Literal(Constant((inn.encoded :: prefix).reverse.mkString("."))))
-            val f = c.Expr[String => Option[View]](Ident(fact))
-            val withfactory = reify {
-              f.splice.apply(key.splice).getOrElse(newView.splice)
-            }
-            TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t)))
-          }
-          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), view)
+            Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil)
+          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t),
+            withFactory(newView, t, inn.encoded))
 
           val vgadd: Tree => Tree = addView(_, sel)
           (sel :: a, newv :: add, vgadd :: addview, vg)

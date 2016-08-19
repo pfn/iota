@@ -49,7 +49,7 @@ object ViewTree {
       * If `lp` is not called, any layout decorator call will insert default
       * LayoutParams. Default LayoutParams have WRAP_CONTENT for both width and height
       */
-    def lp(args: Any*) = macro ViewTreeMacro.lp
+    def lp(args: Any*): Unit = macro ViewTreeMacro.lp
   }
   case class ViewGravityLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[LinearLayout] with LayoutConstraint2[FrameLayout] {
     def gravity(value: Int): Unit = macro ViewTreeMacro.layoutParamField
@@ -118,6 +118,27 @@ object ViewTree {
   def inflate[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A): A = macro ViewTreeMacro.inflateAny[A]
   def inflate[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A): A = macro ViewTreeMacro.inflateAny[A]
   def inflate[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A): A = macro ViewTreeMacro.inflateAny[A]
+
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
+  def inflateF[A <: ViewTree[_]](ctx: Context, inflater: (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => A)(factory: PartialFunction[String,View]): A = macro ViewTreeMacro.inflateWithFactory[A]
 }
-
-

@@ -12,13 +12,29 @@ import scala.reflect.api.Universe
 private[iota] object ViewTreeMacro {
   import scala.reflect.macros.Context
 
-  def inflateAny[A: c.WeakTypeTag](c: Context)(ctx: c.Expr[AndroidContext], inflater: c.Expr[Any]): c.Expr[A] = {
+  def inflateBase[A: c.WeakTypeTag](c: Context)(ctx: c.Expr[AndroidContext],
+                                                inflater: c.Expr[Any],
+                                                prefix: List[String],
+                                                factoryTerm: Option[c.TermName],
+                                                factory: Option[c.Expr[PartialFunction[String,View]]]): c.Expr[A] = {
     import c.universe._
     val vgt = c.weakTypeOf[ViewGroup]
     val vwt = c.weakTypeOf[View]
     val vtt = c.weakTypeOf[ViewTree[_]]
     val act = c.weakTypeOf[AndroidContext]
     val wtt = implicitly[WeakTypeTag[A]]
+
+    // TODO take factory output, catch cast exceptions and re-throw with better diagnostics
+    // yuck, refactor this
+    val factoryVal = factoryTerm.map(t => Some(t) -> Option.empty[Tree]).getOrElse(
+      factory.fold((Option.empty[TermName],Option.empty[Tree])) { f =>
+        val fterm = newTermName(c.fresh("factory"))
+        val ftree = reify {
+          f.splice.lift
+        }.tree
+        Some(fterm) ->
+          Some(ValDef(Modifiers(Flag.PARAM), fterm, TypeTree(typeOf[String => Option[View]]), ftree))
+      })
 
     val inputs = inflater.tree match {
       case Block(_, Function(in, _)) => in.map(i => (i.name,i.tpt, None))
@@ -34,7 +50,7 @@ private[iota] object ViewTreeMacro {
               Option(Select(Ident(inflater.tree.symbol), newTermName(getter.encoded)))
             }
             else None
-            )
+          )
         }
     }
     def addView(vg: Tree, view: Tree): Tree = {
@@ -57,21 +73,56 @@ private[iota] object ViewTreeMacro {
         if (deft.nonEmpty) {
           val newterm = newTermName(c.fresh("defview"))
           val sel = Ident(newterm)
-          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), deft.get)
+
+          val defaultView = c.Expr[View](deft.get)
+          val view = factoryVal._1.fold(defaultView.tree) { fact =>
+            val key = c.Expr[String](Literal(Constant((inn.encoded :: prefix).reverse.mkString("."))))
+            val f = c.Expr[String => Option[View]](Ident(fact))
+            val withfactory = reify {
+              f.splice.apply(key.splice).getOrElse(defaultView.splice)
+            }
+            TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t)))
+          }
+          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), view)
+
           val vgadd: Tree => Tree = addView(_, sel)
+
           (sel :: a, newv :: add, vgadd :: addview, vg)
         } else if (inn.encoded == "container" && t <:< vgt) {
-          val nvg = Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil)
+          if (vg.isDefined)
+            c.abort(c.enclosingPosition, s"'container' has already been defined in $inn?!?!")
+
           val newterm = newTermName(c.fresh("viewgroup"))
-          val newvg = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), nvg)
           val sel = Ident(newterm)
 
-          (sel :: a, newvg :: add, addview, Some(sel))
+          val nvg = c.Expr[ViewGroup](Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil))
+          val newvg = factoryVal._1.fold(nvg.tree) { fact =>
+            val key = c.Expr[String](Literal(Constant((inn.encoded :: prefix).reverse.mkString("."))))
+            val f = c.Expr[String => Option[View]](Ident(fact))
+            val withfactory = reify {
+              f.splice.apply(key.splice).getOrElse(nvg.splice)
+            }
+            TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t)))
+          }
+          val newvgVal = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), newvg)
+
+          (sel :: a, newvgVal :: add, addview, Some(sel))
         } else if (t <:< vwt) {
           val newterm = newTermName(c.fresh("view"))
           val sel = Ident(newterm)
-          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t),
-            Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil))
+
+          val newView =
+            c.Expr[View](Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil))
+          val view = factoryVal._1.fold(newView.tree) { fact =>
+            val key = c.Expr[String](Literal(Constant((inn.encoded :: prefix).reverse.mkString("."))))
+            val f = c.Expr[String => Option[View]](Ident(fact))
+            val withfactory = reify {
+              f.splice.apply(key.splice).getOrElse(newView.splice)
+            }
+            TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t)))
+          }
+          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), view)
+
           val vgadd: Tree => Tree = addView(_, sel)
           (sel :: a, newv :: add, vgadd :: addview, vg)
         } else if (t =:= act) { // inject a context parameter into arg list if requested
@@ -83,7 +134,7 @@ private[iota] object ViewTreeMacro {
           val applyTree = if (t.typeSymbol.owner.isPackage) Ident(t.typeSymbol.companionSymbol)
           else Select(ownerTree, t.typeSymbol.companionSymbol)
           // WeakTypeTag hack so that nested valdef has correct type
-          val tree = inflateAny(c)(ctx, c.Expr(applyTree))(new WeakTypeTag[A] {
+          val tree = inflateBase(c)(ctx, c.Expr(applyTree), inn.encoded :: prefix, factoryVal._1, factory)(new WeakTypeTag[A] {
             override val mirror = rootMirror
             override def in[U <: Universe with Singleton](otherMirror: reflect.api.Mirror[U]) = sys.error("nice try")
             override def tpe = t.typeSymbol.asType.toType
@@ -115,10 +166,20 @@ private[iota] object ViewTreeMacro {
     )
     c.Expr(
       Block(
-        sts.reverse ++ List(newvt) ++ vgs.toList.flatMap(v => addviews.reverse.map(_.apply(v))),
+        factoryVal._2.toList ++ sts.reverse ++ List(newvt) ++ vgs.toList.flatMap(v => addviews.reverse.map(_.apply(v))),
         Ident(vtterm)
       )
     )
+  }
+
+  def inflateWithFactory[A: c.WeakTypeTag](c: Context)
+                                          (ctx: c.Expr[AndroidContext], inflater: c.Expr[Any])
+                                          (factory: c.Expr[PartialFunction[String,View]]): c.Expr[A] = {
+    inflateBase(c)(ctx, inflater, Nil, None, Some(factory))
+  }
+
+  def inflateAny[A: c.WeakTypeTag](c: Context)(ctx: c.Expr[AndroidContext], inflater: c.Expr[Any]): c.Expr[A] = {
+    inflateBase(c)(ctx, inflater, Nil, None, None)
   }
 
   val layoutParamFieldOps = Map(

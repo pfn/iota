@@ -199,12 +199,16 @@ object AnotherTest extends Activity {
   }
   val aSimple: Simple = ViewTree.inflate(this, Simple)
   val r = ViewTree.inflate(this, SimpleRelative)
+  val r2 = ViewTree.inflateF(this, Nested) {
+    case "text"     => new TextView(this)
+    case "sub.text" => new TextView(this)
+  }
 
-  case class NestedItem(container: FrameLayout, text: TextView) extends ViewTree[FrameLayout] {
+  case class NestedItem(container: FrameLayout, text: TextView, sub2: SimpleRelative) extends ViewTree[FrameLayout] {
     text.gravity(Gravity.CENTER)
   }
   case class Nested1(container: LinearLayout, b: Bugger) extends ViewTree[LinearLayout]
-  case class Nested(container: LinearLayout, text: TextView, sub: NestedItem) extends ViewTree[LinearLayout]
+  case class Nested(container: LinearLayout, text: TextView = new TextView(AnotherTest), sub: NestedItem) extends ViewTree[LinearLayout]
   val aNested: Nested = ViewTree.inflate(this, Nested)
   val aNested1 = ViewTree.inflate(this, Nested1)
   val bugger = ViewTree.inflate(this, Bugger)

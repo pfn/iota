@@ -35,30 +35,6 @@ private[iota] object ViewTreeMacro {
           Some(ValDef(Modifiers(Flag.PARAM), fterm, TypeTree(typeOf[String => Option[View]]), ftree))
       })
 
-    def withFactory(view: Tree, t: Type, k: String): Tree = {
-      val viewExpr = c.Expr[View](view)
-      factoryVal._1.fold(view) { fact =>
-        val key = c.Expr[String](Literal(Constant((k :: prefix).reverse.mkString("."))))
-        val f = c.Expr[String => Option[View]](Ident(fact))
-        val withfactory = reify {
-          f.splice.apply(key.splice).getOrElse(viewExpr.splice)
-        }
-        val tpe = c.Expr[String](Literal(Constant(t.toString)))
-        val facOut = c.Expr[View](TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t))))
-        reify {
-          try {
-            facOut.splice
-          } catch {
-            case e: ClassCastException =>
-              val ex = new ClassCastException(s"Failed to cast '${key.splice}' to ${tpe.splice}")
-              ex.initCause(e)
-              ex.setStackTrace(Array.ofDim(0))
-              throw ex
-          }
-        }.tree
-      }
-    }
-
     val inputs = inflater.tree match {
       case Block(_, Function(in, _)) => in.map(i => (i.name,i.tpt, None))
       case TypeTree() | Select(_, _) | Ident(_) =>
@@ -76,6 +52,7 @@ private[iota] object ViewTreeMacro {
           )
         }
     }
+
     def addView(vg: Tree, view: Tree): Tree = {
       val v = c.Expr[View](view)
       val g = c.Expr[ViewGroup](vg)
@@ -89,16 +66,41 @@ private[iota] object ViewTreeMacro {
           a.splice
       }.tree
     }
+
     val (args, sts, addviews, vgs) = inputs.foldLeft(
       (List.empty[Tree], List.empty[Tree], List.empty[Tree => Tree],Option.empty[Tree])) {
       case ((a,add,addview,vg),(inn,int,deft)) =>
         val t = int.tpe
+
+        def withFactory(view: Tree): Tree = {
+          val viewExpr = c.Expr[View](view)
+          factoryVal._1.fold(view) { fact =>
+            val key = c.Expr[String](Literal(Constant((inn.encoded :: prefix).reverse.mkString("."))))
+            val f = c.Expr[String => Option[View]](Ident(fact))
+            val withfactory = reify {
+              f.splice.apply(key.splice).getOrElse(viewExpr.splice)
+            }
+            val tpe = c.Expr[String](Literal(Constant(t.toString)))
+            val facOut = c.Expr[View](TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t))))
+            reify {
+              try {
+                facOut.splice
+              } catch {
+                case e: ClassCastException =>
+                  val ex = new ClassCastException(s"Failed to cast '${key.splice}' to ${tpe.splice}")
+                  ex.initCause(e)
+                  ex.setStackTrace(Array.ofDim(0))
+                  throw ex
+              }
+            }.tree
+          }
+        }
+
         if (deft.nonEmpty) {
           val newterm = newTermName(c.fresh("defview"))
           val sel = Ident(newterm)
 
-          withFactory(deft.get, t, inn.encoded)
-          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), withFactory(deft.get, t, inn.encoded))
+          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), withFactory(deft.get))
 
           val vgadd: Tree => Tree = addView(_, sel)
 
@@ -111,8 +113,7 @@ private[iota] object ViewTreeMacro {
           val sel = Ident(newterm)
 
           val nvg = Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil)
-          val newvgVal = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t),
-            withFactory(nvg, t, inn.encoded))
+          val newvgVal = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), withFactory(nvg))
 
           (sel :: a, newvgVal :: add, addview, Some(sel))
         } else if (t <:< vwt) {
@@ -121,8 +122,7 @@ private[iota] object ViewTreeMacro {
 
           val newView =
             Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), ctx.tree :: Nil)
-          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t),
-            withFactory(newView, t, inn.encoded))
+          val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), withFactory(newView))
 
           val vgadd: Tree => Tree = addView(_, sel)
           (sel :: a, newv :: add, vgadd :: addview, vg)

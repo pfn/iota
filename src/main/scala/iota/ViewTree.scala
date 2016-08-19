@@ -8,25 +8,40 @@ import android.annotation.TargetApi
 /**
   * @author pfnguyen
   */
-trait ViewTree[A <: ViewGroup] {
+trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product {
+  import ViewTree._
+
+  /** @return an iterator with breadth-first traversal */
+  override def iterator = new Iterator[Children] {
+    var queue = collection.immutable.Queue[Children](Left(ViewTree.this))
+    override def hasNext = queue.nonEmpty
+    override def next() = {
+      val (n, q) = queue.dequeue
+      queue = q ++ (n match {
+        case Left(vt) => vt.productIterator.map {
+          case tree: ViewTree[_] => Left(tree)
+          case view: View        => Right(view)
+        }
+        case Right(ch) => Nil
+      })
+      n
+    }
+  }
+
   val container: A
 
   // implicits to allow implementations to access DSL
-  import ViewTree._
   final implicit def viewLayoutExtensions(v: View):         ViewLayoutExtensions         = ViewLayoutExtensions(v)
   final implicit def viewLinearLayoutExtensions(v: View):   ViewLinearLayoutExtensions   = ViewLinearLayoutExtensions(v)
   final implicit def viewFrameLayoutExtensions(v: View):    ViewFrameLayoutExtensions    = ViewFrameLayoutExtensions(v)
   final implicit def viewRelativeLayoutExtensions(v: View): ViewRelativeLayoutExtensions = ViewRelativeLayoutExtensions(v)
   final implicit def viewMarginLayoutExtensions(v: View):   ViewMarginLayoutExtensions   = ViewMarginLayoutExtensions(v)
-  final implicit def contextViewExtension(c: Context):      ContextViewExtensions        = ContextViewExtensions(c)
 }
 object ViewTree {
+  type Children = Either[ViewTree[_], _ <: View]
   trait LayoutConstraint[A <: ViewGroup] extends Any
   trait LayoutParamConstraint[A <: ViewGroup.LayoutParams] extends Any
   import android.widget._
-  case class ContextViewExtensions(c: Context) extends AnyVal {
-    def v[A <: View](args: Any*) = ???
-  }
   case class ViewLayoutExtensions(v: View) extends AnyVal {
     def lp(args: Any*) = macro ViewTreeMacro.lp
   }

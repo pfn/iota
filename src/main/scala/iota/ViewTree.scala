@@ -30,8 +30,6 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
 
   val container: A
 
-  def wrap[Z <: ViewGroup](v: View)(f: Z => Any): Unit = ???
-
   // implicits to allow implementations to access DSL
   final implicit def viewLayoutExtensions(v: View):         ViewLayoutExtensions         = ViewLayoutExtensions(v)
   final implicit def viewLinearLayoutExtensions(v: View):   ViewLinearLayoutExtensions   = ViewLinearLayoutExtensions(v)

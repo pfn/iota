@@ -44,9 +44,10 @@ private[iota] object ViewTreeMacro {
         val a = c.Expr[Unit](Apply(Select(vg, newTermName("addView")), List(view)))
         // support the possibility of adding an anonymous level in the view hierarchy
         reify {
-          if (v.splice.getParent != null && v.splice.getParent != g.splice)
-            g.splice.addView(v.splice.getParent.asInstanceOf[ViewGroup])
-          else
+          if (v.splice.getParent != null && v.splice.getParent != g.splice) {
+            if (v.splice.getParent.getParent == null)
+              g.splice.addView(v.splice.getParent.asInstanceOf[ViewGroup])
+          } else
             a.splice
         }.tree
       }

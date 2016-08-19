@@ -97,7 +97,6 @@ private[iota] object ViewTreeMacro {
           val newterm = newTermName(c.fresh("defview"))
           val sel = Ident(newterm)
 
-          val defaultView = c.Expr[View](deft.get)
           withFactory(deft.get, t, inn.encoded)
           val newv = ValDef(Modifiers(Flag.PARAM), newterm, TypeTree(t), withFactory(deft.get, t, inn.encoded))
 

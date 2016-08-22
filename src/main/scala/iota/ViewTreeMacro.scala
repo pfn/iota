@@ -128,13 +128,8 @@ private[iota] object ViewTreeMacro {
         } else if (t =:= act) { // inject a context parameter into arg list if requested
           (ctx.tree :: a, add, addview, vg)
         } else if (t <:< vtt) {
-          val ownerTree = if (t.typeSymbol.owner.isPackage) Ident(t.typeSymbol.owner)
-          else if (t.typeSymbol.owner.isClass) This(t.typeSymbol.owner)
-          else EmptyTree
-          val applyTree = if (t.typeSymbol.owner.isPackage) Ident(t.typeSymbol.companionSymbol)
-          else Select(ownerTree, t.typeSymbol.companionSymbol)
           // WeakTypeTag hack so that nested valdef has correct type
-          val tree = inflateBase(c)(ctx, c.Expr(applyTree), inn.encoded :: prefix, factoryVal._1, factory)(new WeakTypeTag[A] {
+          val tree = inflateBase(c)(ctx, c.Expr(nestedApply(c)(t)), inn.encoded :: prefix, factoryVal._1, factory)(new WeakTypeTag[A] {
             override val mirror = rootMirror
             override def in[U <: Universe with Singleton](otherMirror: reflect.api.Mirror[U]) = sys.error("nice try")
             override def tpe = t.typeSymbol.asType.toType
@@ -172,9 +167,104 @@ private[iota] object ViewTreeMacro {
     )
   }
 
+  def nestedApply(c: Context)(t: c.Type): c.Tree = {
+    import c.universe._
+    val ownerTree = if (t.typeSymbol.owner.isPackage) Ident(t.typeSymbol.owner)
+    else if (t.typeSymbol.owner.isClass) This(t.typeSymbol.owner)
+    else EmptyTree
+    if (t.typeSymbol.owner.isPackage) Ident(t.typeSymbol.companionSymbol)
+    else Select(ownerTree, t.typeSymbol.companionSymbol)
+  }
+
+  def inflaterSymbols(c: Context)(inflater: c.Tree, prefix: List[String]): Either[(c.Position,String),Map[String,c.Type]] = {
+    import c.universe._
+    inflater match {
+      case TypeTree() | Select(_, _) | Ident(_) =>
+        val applySym = inflater.symbol.typeSignature.member(newTermName("apply")).asMethod
+
+        val rs = applySym.paramss.head.zipWithIndex.map { case (p,i) =>
+          if (p.typeSignature <:< typeOf[View]) {
+            Right(Map((p.name.encoded :: prefix).reverse.mkString(".") -> p.typeSignature))
+          } else if (p.typeSignature <:< typeOf[ViewTree[_]]) {
+            inflaterSymbols(c)(nestedApply(c)(p.typeSignature), p.name.encoded :: prefix)
+          } else {
+            Right(Map.empty)
+          }
+        }
+        rs.foldLeft(Right(Map.empty) :Either[(c.Position,String),Map[String,c.Type]]) {
+          case (a,r) =>
+            for {
+              ac <- a.right
+              m <- r.right
+            } yield ac ++ m
+        }
+      case _ => Left((inflater.pos, "ViewTree factory cannot be inspected for typesafety"))
+    }
+  }
+
   def inflateWithFactory[A: c.WeakTypeTag](c: Context)
                                           (ctx: c.Expr[AndroidContext], inflater: c.Expr[Any])
                                           (factory: c.Expr[PartialFunction[String,View]]): c.Expr[A] = {
+    import c.universe._
+    val callsite = c.asInstanceOf[reflect.macros.runtime.Context].callsiteTyper.context.enclosingContextChain.head.tree
+    val nowarn = callsite.symbol.annotations.exists(_.tpe.asInstanceOf[c.Type] =:= typeOf[ViewTree.UnsafeOperation])
+    type Pattern = (Option[String], Tree, Tree, Option[(Position,String)])
+    val found = factory.tree.collect {
+      case DefDef(_, name, _, vps, tpt, rhs) if name.encoded == "applyOrElse" =>
+        rhs
+    }.headOption
+
+    val syms = inflaterSymbols(c)(inflater.tree, Nil)
+    import scala.reflect.internal.{Definitions, SymbolTable, StdNames}
+    val u = c.universe.asInstanceOf[Definitions with SymbolTable with StdNames]
+
+    def handlePattern(pat: Tree, body: Tree): List[Pattern] = pat match {
+      case Bind(name, _) =>
+        if (name.encoded == u.nme.DEFAULT_CASE.encoded) Nil
+        else List((None, pat, body, Some((pat.pos, "wildcard ViewTree factory patterns cannot be typechecked"))))
+      case Literal(Constant(s: String)) =>
+        List((Some(s), pat, body, None))
+      case Alternative(pats) =>
+        pats.flatMap(handlePattern(_, body))
+      case y =>
+        List((None, pat, body, Some((pat.pos, "this ViewTree factory case pattern cannot be typechecked"))))
+    }
+
+    val cases: List[Pattern] = found.toList.flatMap(_.collect {
+      case CaseDef(pat, guard, body) =>
+        handlePattern(pat, body)
+      case _ => Nil
+    }.flatten)
+
+    if (!nowarn) {
+      syms.left.foreach { case (pos, w) =>
+        c.warning(pos, w)
+      }
+      if (found.isEmpty)
+        c.warning(factory.tree.pos, "Embedded ViewTree factory functions cannot be checked for type-safety")
+      cases.foreach {
+        case (_, _, _, Some((pos, s))) => c.warning(pos, s)
+        case _ =>
+      }
+    }
+    val symbols = syms.fold(_ => Map.empty[String, c.Type], identity)
+    val errors = cases.foldLeft(List.empty[(c.Position,String)]) {
+      case (errs, (n, pat, body, _)) => n.toList.flatMap { nm =>
+        symbols.get(nm).fold(List(pat.pos -> s"not found in ${inflater.tree.symbol.companionSymbol}: pattern '$nm'")) { tpe =>
+          if (!(body.tpe <:< tpe)) {
+            List(body.pos -> (s"ViewTree type mismatch;\n" +
+              s" found    : ${body.tpe}\n" +
+              s" required : $tpe"))
+          }
+          else Nil
+        }
+      } ++ errs
+    }
+    if (errors.nonEmpty) {
+      errors.foreach { case (pos, e) => c.error(pos, e) }
+      c.abort(c.enclosingPosition, "ViewTree factory type inspection failed")
+    }
+
     inflateBase(c)(ctx, inflater, Nil, None, Some(factory))
   }
 

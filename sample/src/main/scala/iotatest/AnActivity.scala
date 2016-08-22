@@ -199,10 +199,20 @@ object AnotherTest extends Activity {
   }
   val aSimple: Simple = ViewTree.inflate(this, Simple)
   val r = ViewTree.inflate(this, SimpleRelative)
+  val pf: PartialFunction[String,View] = {
+    case "xy" => new View(null)
+  }
   val r2 = ViewTree.inflateF(this, Nested) {
     case "text"     => new TextView(this)
     case "sub.text" => new TextView(this)
   }
+  val r4 = ViewTree.inflateF(this, Nested) {
+    case "text" => new TextView(this)
+    case "sub.text" => new TextView(this)
+    case x => null
+  }
+  @ViewTree.UnsafeOperation
+  val r3 = ViewTree.inflateF(this, Nested)(pf)
 
   case class NestedItem(container: FrameLayout, text: TextView, sub2: SimpleRelative) extends ViewTree[FrameLayout] {
     text.gravity(Gravity.CENTER)

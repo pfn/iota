@@ -490,8 +490,29 @@ private[iota] object ViewTreeMacro {
 
   def makeLp(c: Context, op: String)(args: c.Expr[Any]*): c.Tree = {
     import c.universe._
-    Apply(Select(
-      New(TypeTree(layoutParamType(c, op))), nme.CONSTRUCTOR), args.map(_.tree).toList)
+    val ctor = layoutParamType(c, op).member(nme.CONSTRUCTOR).asTerm
+    val ctors = if (ctor.isOverloaded) {
+      ctor.alternatives.map(_.asMethod)
+    } else
+      List(ctor.asMethod)
+
+    val argtypes = args.map(e => c.typeCheck(e.tree).tpe).toList
+    val hasCtor = ctors.exists { a =>
+      val ptypes = a.asMethod.paramss.head.map(_.typeSignature)
+      val zipped = argtypes.zip(ptypes)
+      zipped.size == argtypes.size && zipped.forall { case (x, y) => x <:< y }
+    }
+
+    // allow creating defaults for GridLayout.LayoutParams
+    if (hasCtor) {
+      Apply(Select(
+        New(TypeTree(layoutParamType(c, op))), nme.CONSTRUCTOR), args.map(_.tree).toList)
+    } else {
+      val base = Apply(Select(
+        New(TypeTree(typeOf[ViewGroup.LayoutParams])), nme.CONSTRUCTOR), args.map(_.tree).toList)
+      Apply(Select(
+        New(TypeTree(layoutParamType(c, op))), nme.CONSTRUCTOR), List(base))
+    }
   }
 
   def lp[A,B <: A : c.WeakTypeTag](c: Context)(args: c.Expr[Any]*)(ev: c.Expr[B =:= A]): c.Expr[B] = {

@@ -189,11 +189,14 @@ object AnotherTest extends Activity {
 
   case class Simple(container: LinearLayout, text: TextView) extends ViewTree[LinearLayout] {
     text.lp(MATCH_PARENT, MATCH_PARENT).lp(WRAP_CONTENT, WRAP_CONTENT).lp(MATCH_PARENT, WRAP_CONTENT)
-
     text.matchWidth().wrapHeight()
     text.gravity(Gravity.TOP)
     text.marginTop(15)
   }
+  case class TestGrid(container: GridLayout, text: TextView) extends ViewTree[GridLayout] {
+    text.marginTop(10)
+  }
+
   case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = new TextView(AnotherTest, null, 0), text2: TextView) extends ViewTree[RelativeLayout] {
     text1.above(text2)
     text1.endOf(text2)
@@ -202,7 +205,6 @@ object AnotherTest extends Activity {
     text1.alignWithParentIfMissing()
     nest[FrameLayout](text1) {
       if (true) {
-
         nest[GridLayout](text2) {
         }
         nest[LinearLayout](text2) {

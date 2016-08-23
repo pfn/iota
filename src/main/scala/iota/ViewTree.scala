@@ -26,7 +26,10 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
       })
       n
     }
+
   }
+
+  def nest[B <: ViewGroup](views: View)(body: Any): ViewTree[B] = ???
 
   val container: A
 

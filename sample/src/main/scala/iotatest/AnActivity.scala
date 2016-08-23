@@ -26,6 +26,7 @@ import iota._
 /**
  * @author pfnguyen
  */
+/*
 class AnActivity extends Activity {
 
   import ViewGroup.LayoutParams._
@@ -111,6 +112,7 @@ class AnActivity extends Activity {
     (findView(3) : ImageView).setImageResource(0)
   }
 }
+*/
 
 class Frag extends android.app.Fragment {
   materializeContext.getSystemService(android.content.Context.NOTIFICATION_SERVICE)
@@ -196,6 +198,22 @@ object AnotherTest extends Activity {
     text1.alignParentEnd()
     text1.alignParentBottom()
     text1.alignWithParentIfMissing()
+    nest[FrameLayout](text1) {
+      if (true) {
+
+        nest[GridLayout](text2) {
+        }
+        nest[LinearLayout](text2) {
+          text1.gravity(0)
+          text1.gravity(0)
+          text1.gravity(0)
+          text1.gravity(0)
+        }
+        nest[RelativeLayout](text2) {
+        }
+      } else {
+      }
+    }
   }
   val aSimple: Simple = ViewTree.inflate(this, Simple)
   val r = ViewTree.inflate(this, SimpleRelative)

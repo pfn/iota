@@ -206,8 +206,8 @@ private[iota] object ViewTreeMacro {
                                           (ctx: c.Expr[AndroidContext], inflater: c.Expr[Any])
                                           (factory: c.Expr[PartialFunction[String,View]]): c.Expr[A] = {
     import c.universe._
-    val callsite = c.asInstanceOf[reflect.macros.runtime.Context].callsiteTyper.context.enclosingContextChain.head.tree
-    val nowarn = callsite.symbol.annotations.exists(_.tpe.asInstanceOf[c.Type] =:= typeOf[ViewTree.UnsafeOperation])
+    val callsite = enclosingTrees(c).head
+    val nowarn = callsite.symbol.annotations.exists(_.tpe =:= typeOf[ViewTree.UnsafeOperation])
     type Pattern = (Option[String], Tree, Tree, Option[(Position,String)])
     val found = factory.tree.collect {
       case DefDef(_, name, _, vps, tpt, rhs) if name.encoded == "applyOrElse" =>
@@ -306,6 +306,30 @@ private[iota] object ViewTreeMacro {
     "rightOf"           -> RelativeLayout.RIGHT_OF,
     "startOf"           -> RelativeLayout.START_OF
   )
+
+  def enclosingTrees(c: Context): List[c.Tree] = {
+    c.asInstanceOf[reflect.macros.runtime.Context].callsiteTyper.context.enclosingContextChain.map(_.tree.asInstanceOf[c.Tree])
+  }
+
+  def findNestLayoutOf(c: Context) = {
+    // ASSUMPTION nest will only ever occur inside a ViewTree case class
+    // LIMITATION if nest[] occurs outside of case class A extends ViewTree this behaves badly
+    import c.universe._
+    val trees = enclosingTrees(c)
+    val target = c.macroApplication
+    val pf: PartialFunction[Tree, Name] = {
+      case Apply(Apply(TypeApply(Ident(name), List(Ident(tpe))), List(views)), body)
+        if name.encoded == "nest" && body.exists(b => b.pos == target.pos || b.children.exists(_.pos == target.pos)) => tpe
+    }
+    (target.collect(pf) ++ trees.foldLeft(List.empty[c.Name]) { (a, t) =>
+      if (a.isEmpty)
+        t.collect(pf)
+      else a
+    }).headOption.map { tn =>
+      // reify TypeName to Type, hack because typeCheck expects a term
+      c.typeCheck(Typed(Throw(Literal(Constant(null))), Ident(tn))).tpe
+    }
+  }
 
   def checkLayoutConstraint(c: Context)(op: String, lpt: c.Type): Unit = {
     import c.universe._
@@ -423,9 +447,10 @@ private[iota] object ViewTreeMacro {
     val vgt = c.weakTypeOf[ViewGroup]
     val vtt = typeOf[ViewTree[_]]
     val vts = c.enclosingClass.symbol.typeSignature.baseType(vtt.typeSymbol)
+
     if (vts == NoType)
       c.abort(c.enclosingPosition, s"'$op' can only be used in a subclass of iota.ViewTree")
-    vts.find(_ <:< vgt).get
+    findNestLayoutOf(c).orElse(vts.find(_ <:< vgt)).get
   }
 
   def layoutParamType(c: Context, op: String): c.Type =

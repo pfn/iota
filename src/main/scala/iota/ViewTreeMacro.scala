@@ -539,7 +539,7 @@ private[iota] object ViewTreeMacro {
     val hasCtor = ctors.exists { a =>
       val ptypes = a.asMethod.paramss.head.map(_.typeSignature)
       val zipped = argtypes.zip(ptypes)
-      zipped.size == argtypes.size && zipped.forall { case (x, y) => x <:< y }
+      zipped.size == argtypes.size && zipped.forall { case (x, y) => x weak_<:< y }
     }
 
     // allow creating defaults for GridLayout.LayoutParams

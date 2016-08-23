@@ -192,6 +192,7 @@ object AnotherTest extends Activity {
     text.matchWidth().wrapHeight()
     text.gravity(Gravity.TOP)
     text.marginTop(15)
+    text.lp(1,1,1)
   }
   case class TestGrid(container: GridLayout, text: TextView) extends ViewTree[GridLayout] {
     text.marginTop(10)

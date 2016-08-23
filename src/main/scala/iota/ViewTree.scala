@@ -27,7 +27,7 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
     }
   }
 
-  def nest[B <: ViewGroup](views: View*)(body: Any): ViewTree[B] = ???
+  def nest[B <: ViewGroup](views: View*)(body: Any): ViewTree[B] = macro ViewTreeMacro.nest[B]
 
   val container: A
 

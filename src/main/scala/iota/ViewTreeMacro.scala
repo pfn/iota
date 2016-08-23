@@ -277,7 +277,17 @@ private[iota] object ViewTreeMacro {
     inflateBase(c)(ctx, inflater, Nil, None, None)
   }
 
+  val matchWrapValues = Map(
+    "matchWidth"          -> ViewGroup.LayoutParams.MATCH_PARENT,
+    "matchHeight"         -> ViewGroup.LayoutParams.MATCH_PARENT,
+    "wrapWidth"           -> ViewGroup.LayoutParams.WRAP_CONTENT,
+    "wrapHeight"          -> ViewGroup.LayoutParams.WRAP_CONTENT
+  )
   val layoutParamFieldOps = Map(
+    "matchWidth"          -> "width",
+    "matchHeight"         -> "height",
+    "wrapWidth"           -> "width",
+    "wrapHeight"          -> "height",
     "weight"              -> "weight",
     "gravity"             -> "gravity",
     "marginRight"         -> "rightMargin",
@@ -358,30 +368,33 @@ private[iota] object ViewTreeMacro {
     }
   }
 
-  def withLayoutParams(c: Context)(op: String, lpt: c.Type, stas: List[c.Tree => c.Tree], sts: List[c.Tree]) = {
+  def withLayoutParams[B: c.WeakTypeTag](c: Context)(op: String, lpt: c.Type, stas: List[c.Tree => c.Tree], sts: List[c.Tree]): c.Expr[B] = {
     import c.universe._
     val defparams = c.Expr[ViewGroup.LayoutParams](defaultLp(c, op))
-    val view = c.Expr[View](c.prefix.tree.children.last)
+    val view = c.prefix.tree.children.last
+    val viewterm = newTermName(c.fresh("view"))
+    val viewdef = ValDef(Modifiers(Flag.PARAM), viewterm, TypeTree(c.weakTypeOf[B]), view)
+    val vsplice = c.Expr[View](Ident(viewterm))
     val checklptype = c.Expr[Boolean](
       TypeApply(Select(
-        Apply(Select(view.tree, newTermName("getLayoutParams")), Nil),
+        Apply(Select(vsplice.tree, newTermName("getLayoutParams")), Nil),
         newTermName("isInstanceOf")), List(TypeTree(lpt))))
     val ensureLp = reify {
-      if (view.splice.getLayoutParams == null || !checklptype.splice)
-        view.splice.setLayoutParams(defparams.splice)
-      view.splice.getLayoutParams
+      if (vsplice.splice.getLayoutParams == null || !checklptype.splice)
+        vsplice.splice.setLayoutParams(defparams.splice)
+      vsplice.splice.getLayoutParams
     }.tree
     val vterm = newTermName(c.fresh("lp"))
     val vdef = ValDef(Modifiers(Flag.PARAM), vterm, TypeTree(lpt),
       TypeApply(Select(ensureLp, newTermName("asInstanceOf")), List(TypeTree(lpt)))
     )
-    c.Expr(Block(
-      vdef :: (sts ++ stas.map(_.apply(Ident(vterm)))),
-      Literal(Constant(()))
+    c.Expr[B](Block(
+      viewdef :: vdef :: (sts ++ stas.map(_.apply(Ident(vterm)))),
+      Ident(viewterm)
     ))
   }
 
-  def layoutParamField(c: Context)(value: c.Expr[Any]): c.Expr[Unit] = {
+  def layoutParamField[A, B <: A : c.WeakTypeTag](c: Context)(value: c.Expr[Any])(ev: c.Expr[B =:= A]): c.Expr[B] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val intParam: Tree => Tree  = t =>
@@ -389,7 +402,13 @@ private[iota] object ViewTreeMacro {
     withLayoutParams(c)(op, lpt, intParam :: Nil, Nil)
   }
 
-  def withTargetApi(c: Context)(tree: c.Expr[Unit]): c.Expr[Unit] = {
+  def layoutParamField2[A, B <: A : c.WeakTypeTag](c: Context)()(ev: c.Expr[B =:= A]): c.Expr[B] = {
+    import c.universe._
+    val (op, _) = commonLayoutConstraints(c)
+    layoutParamField(c)(c.Expr(Literal(Constant(matchWrapValues(op)))))(ev)
+  }
+
+  def withTargetApi[B: c.WeakTypeTag](c: Context)(tree: c.Expr[B], view: c.Expr[B]): c.Expr[B] = {
     import c.universe._
     val target = c.macroApplication.symbol.annotations.find(_.tpe <:< typeOf[TargetApi]).flatMap {
       _.javaArgs.values.collectFirst {
@@ -401,6 +420,8 @@ private[iota] object ViewTreeMacro {
       reify {
         if (android.os.Build.VERSION.SDK_INT >= vers.splice)
           tree.splice
+        else
+          view.splice
       }
     }
   }
@@ -412,7 +433,7 @@ private[iota] object ViewTreeMacro {
     (op, lpt)
   }
 
-  def relativeLayoutParamView(c: Context)(view: c.Expr[View]): c.Expr[Unit] = {
+  def relativeLayoutParamView[A, B <: A : c.WeakTypeTag](c: Context)(view: c.Expr[View])(ev: c.Expr[B =:= A]): c.Expr[B] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val ensureId = reify {
@@ -427,19 +448,19 @@ private[iota] object ViewTreeMacro {
     val addRule: Tree => Tree = t =>
       Apply(Select(t, newTermName("addRule")), List(Literal(Constant(relativeLayoutParamViewOps(op))), Ident(iterm)))
     val x = withLayoutParams(c)(op, lpt, addRule :: Nil, idef :: Nil)
-    withTargetApi(c)(x)
+    withTargetApi(c)(x, c.Expr(c.prefix.tree.children.last))
   }
 
-  def relativeLayoutUnary(c: Context)(): c.Expr[Unit] = {
+  def relativeLayoutUnary[A, B <: A : c.WeakTypeTag](c: Context)()(ev: c.Expr[B =:= A]): c.Expr[B] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val addRule: Tree => Tree = t =>
       Apply(Select(t, newTermName("addRule")), List(Literal(Constant(relativeLayoutParamViewOps(op))), Literal(Constant(RelativeLayout.TRUE))))
     val x = withLayoutParams(c)(op, lpt, addRule :: Nil, Nil)
-    withTargetApi(c)(x)
+    withTargetApi(c)(x, c.Expr(c.prefix.tree.children.last))
   }
 
-  def relativeLayoutAlignParent(c: Context)(): c.Expr[Unit] = {
+  def relativeLayoutAlignParent[A, B <: A : c.WeakTypeTag](c: Context)()(ev: c.Expr[B =:= A]): c.Expr[B] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val addRule: Tree => Tree = t =>
@@ -473,10 +494,12 @@ private[iota] object ViewTreeMacro {
       New(TypeTree(layoutParamType(c, op))), nme.CONSTRUCTOR), args.map(_.tree).toList)
   }
 
-  def lp(c: Context)(args: c.Expr[Any]*): c.Expr[Unit] = {
+  def lp[A,B <: A : c.WeakTypeTag](c: Context)(args: c.Expr[Any]*)(ev: c.Expr[B =:= A]): c.Expr[B] = {
     import c.universe._
     val view = c.prefix.tree.children.last
     val lp = makeLp(c, "lp")(args:_*)
-    c.Expr(Apply(Select(view, newTermName("setLayoutParams")), List(lp)))
+    val vterm = newTermName(c.fresh("view"))
+    val vdef = ValDef(Modifiers(Flag.PARAM), vterm, TypeTree(c.weakTypeOf[B]), view)
+    c.Expr(Block(List(vdef, Apply(Select(view, newTermName("setLayoutParams")), List(lp))), Ident(vterm)))
   }
 }

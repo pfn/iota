@@ -33,11 +33,11 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
   val container: A
 
   // implicits to allow implementations to access DSL
-  final implicit def viewLayoutExtensions(v: View):         ViewLayoutExtensions         = ViewLayoutExtensions(v)
-  final implicit def viewLinearLayoutExtensions(v: View):   ViewLinearLayoutExtensions   = ViewLinearLayoutExtensions(v)
-  final implicit def viewRelativeLayoutExtensions(v: View): ViewRelativeLayoutExtensions = ViewRelativeLayoutExtensions(v)
-  final implicit def viewMarginLayoutExtensions(v: View):   ViewMarginLayoutExtensions   = ViewMarginLayoutExtensions(v)
-  final implicit def viewGravityLayoutExtensions(v: View):  ViewGravityLayoutExtensions  = ViewGravityLayoutExtensions(v)
+  final implicit def viewLayoutExtensions[Z <: View](v: Z):         ViewLayoutExtensions[Z]         = ViewLayoutExtensions(v)
+  final implicit def viewLinearLayoutExtensions[Z <: View](v: Z):   ViewLinearLayoutExtensions[Z]   = ViewLinearLayoutExtensions(v)
+  final implicit def viewRelativeLayoutExtensions[Z <: View](v: Z): ViewRelativeLayoutExtensions[Z] = ViewRelativeLayoutExtensions(v)
+  final implicit def viewMarginLayoutExtensions[Z <: View](v: Z):   ViewMarginLayoutExtensions[Z]   = ViewMarginLayoutExtensions(v)
+  final implicit def viewGravityLayoutExtensions[Z <: View](v: Z):  ViewGravityLayoutExtensions[Z]  = ViewGravityLayoutExtensions(v)
 }
 object ViewTree extends ViewTreeBoilerplate.Inflate
   with ViewTreeBoilerplate.InflateF with ViewTreeBoilerplate.Check {
@@ -49,55 +49,59 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
   trait LayoutConstraint2[A <: ViewGroup] extends Any
   trait LayoutParamConstraint[A <: ViewGroup.LayoutParams] extends Any
   import android.widget._
-  case class ViewLayoutExtensions(v: View) extends AnyVal {
+  case class ViewLayoutExtensions[A <: View](v: A) extends AnyVal {
     /** construct LayoutParams for the correct type with the specified arguments.
       * If `lp` is not called, any layout decorator call will insert default
       * LayoutParams. Default LayoutParams have WRAP_CONTENT for both width and height
       */
-    def lp(args: Any*): Unit = macro ViewTreeMacro.lp
+    def lp[B <: A](args: Any*)(implicit ev: B =:= A): B = macro ViewTreeMacro.lp[A,B]
+    def matchWidth[B <: A]()(implicit ev: B =:= A):   B = macro ViewTreeMacro.layoutParamField2[A,B]
+    def matchHeight[B <: A]()(implicit ev: B =:= A):  B = macro ViewTreeMacro.layoutParamField2[A,B]
+    def wrapWidth[B <: A]()(implicit ev: B =:= A):    B = macro ViewTreeMacro.layoutParamField2[A,B]
+    def wrapHeight[B <: A]()(implicit ev: B =:= A):   B = macro ViewTreeMacro.layoutParamField2[A,B]
   }
-  case class ViewGravityLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[LinearLayout] with LayoutConstraint2[FrameLayout] {
-    def gravity(value: Int): Unit = macro ViewTreeMacro.layoutParamField
+  case class ViewGravityLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[LinearLayout] with LayoutConstraint2[FrameLayout] {
+    def gravity[B <: A](value: Int)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
   }
-  case class ViewLinearLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[LinearLayout] {
-    def weight(value: Float):            Unit = macro ViewTreeMacro.layoutParamField
+  case class ViewLinearLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[LinearLayout] {
+    def weight[B <: A](value: Float)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
   }
-  case class ViewMarginLayoutExtensions(v: View) extends AnyVal with LayoutParamConstraint[ViewGroup.MarginLayoutParams] {
+  case class ViewMarginLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutParamConstraint[ViewGroup.MarginLayoutParams] {
     // would like a margins(t,l,r,b) but macros don't support default/named args
-    def marginLeft(value: Int):   Unit = macro ViewTreeMacro.layoutParamField
-    def marginTop(value: Int):    Unit = macro ViewTreeMacro.layoutParamField
-    def marginBottom(value: Int): Unit = macro ViewTreeMacro.layoutParamField
-    def marginRight(value: Int):  Unit = macro ViewTreeMacro.layoutParamField
+    def marginLeft[B <: A](value: Int)(implicit ev: B =:= A):   B = macro ViewTreeMacro.layoutParamField[A,B]
+    def marginTop[B <: A](value: Int)(implicit ev: B =:= A):    B = macro ViewTreeMacro.layoutParamField[A,B]
+    def marginBottom[B <: A](value: Int)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
+    def marginRight[B <: A](value: Int)(implicit ev: B =:= A):  B = macro ViewTreeMacro.layoutParamField[A,B]
   }
-  case class ViewRelativeLayoutExtensions(v: View) extends AnyVal with LayoutConstraint[RelativeLayout] {
-    def above(view: View):          Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def alignBaseLine(view: View):  Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def alignBottom(view: View):    Unit = macro ViewTreeMacro.relativeLayoutParamView
+  case class ViewRelativeLayoutExtensions[A <: View](v: View) extends AnyVal with LayoutConstraint[RelativeLayout] {
+    def above[B <: A](view: View)(implicit ev: B =:= A):          B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def alignBaseLine[B <: A](view: View)(implicit ev: B =:= A):  B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def alignBottom[B <: A](view: View)(implicit ev: B =:= A):    B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
     @TargetApi(17)
-    def alignEnd(view: View):       Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def alignLeft(view: View):      Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def alignParentBottom():        Unit = macro ViewTreeMacro.relativeLayoutUnary
+    def alignEnd[B <: A](view: View)(implicit ev: B =:= A):       B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def alignLeft[B <: A](view: View)(implicit ev: B =:= A):      B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def alignParentBottom[B <: A]()(implicit ev: B =:= A):        B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
     @TargetApi(17)
-    def alignParentEnd():           Unit = macro ViewTreeMacro.relativeLayoutUnary
-    def alignParentLeft():          Unit = macro ViewTreeMacro.relativeLayoutUnary
-    def alignParentRight():         Unit = macro ViewTreeMacro.relativeLayoutUnary
+    def alignParentEnd[B <: A]()(implicit ev: B =:= A):           B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def alignParentLeft[B <: A]()(implicit ev: B =:= A):          B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def alignParentRight[B <: A]()(implicit ev: B =:= A):         B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
     @TargetApi(17)
-    def alignParentStart():         Unit = macro ViewTreeMacro.relativeLayoutUnary
-    def alignParentTop():           Unit = macro ViewTreeMacro.relativeLayoutUnary
-    def alignRight(view: View):     Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def alignWithParentIfMissing(): Unit = macro ViewTreeMacro.relativeLayoutAlignParent
+    def alignParentStart[B <: A]()(implicit ev: B =:= A):         B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def alignParentTop[B <: A]()(implicit ev: B =:= A):           B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def alignRight[B <: A](view: View)(implicit ev: B =:= A):     B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def alignWithParentIfMissing[B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutAlignParent[A,B]
     @TargetApi(17)
-    def alignStart(view: View):     Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def alignTop(view: View):       Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def below(view: View):          Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def centerHorizontal():         Unit = macro ViewTreeMacro.relativeLayoutUnary
-    def centerInParent():           Unit = macro ViewTreeMacro.relativeLayoutUnary
-    def centerVertical():           Unit = macro ViewTreeMacro.relativeLayoutUnary
+    def alignStart[B <: A](view: View)(implicit ev: B =:= A):     B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def alignTop[B <: A](view: View)(implicit ev: B =:= A):       B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def below[B <: A](view: View)(implicit ev: B =:= A):          B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def centerHorizontal[B <: A]()(implicit ev: B =:= A):         B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def centerInParent[B <: A]()(implicit ev: B =:= A):           B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def centerVertical[B <: A]()(implicit ev: B =:= A):           B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
     @TargetApi(17)
-    def endOf(view: View):          Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def leftOf(view: View):         Unit = macro ViewTreeMacro.relativeLayoutParamView
-    def rightOf(view: View):        Unit = macro ViewTreeMacro.relativeLayoutParamView
+    def endOf[B <: A](view: View)(implicit ev: B =:= A):          B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def leftOf[B <: A](view: View)(implicit ev: B =:= A):         B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def rightOf[B <: A](view: View)(implicit ev: B =:= A):        B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
     @TargetApi(17)
-    def startOf(view: View):        Unit = macro ViewTreeMacro.relativeLayoutParamView
+    def startOf[B <: A](view: View)(implicit ev: B =:= A):        B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
   }
 }

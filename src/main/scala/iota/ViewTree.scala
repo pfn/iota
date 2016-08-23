@@ -2,7 +2,7 @@ package iota
 
 import android.view.{View, ViewGroup}
 import android.annotation.TargetApi
-
+import android.widget._
 
 /**
   * @author pfnguyen
@@ -47,7 +47,6 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
   /** a second layout type constraint, `OR`d with any other `LayoutConstraint` */
   trait LayoutConstraint2[A <: ViewGroup] extends Any
   trait LayoutParamConstraint[A <: ViewGroup.LayoutParams] extends Any
-  import android.widget._
   case class ViewLayoutExtensions[A <: View](v: A) extends AnyVal {
     /** construct LayoutParams for the correct type with the specified arguments.
       * If `lp` is not called, any layout decorator call will insert default

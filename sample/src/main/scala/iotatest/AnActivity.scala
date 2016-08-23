@@ -217,8 +217,8 @@ object AnotherTest extends Activity {
   }
   val aSimple: Simple = ViewTree.inflate(this, Simple)
   val r = ViewTree.inflate(this, SimpleRelative)
-  val pf: PartialFunction[String,View] = {
-    case "xy" => new View(null)
+  val pf = ViewTree.check(Nested) {
+    case "text" => new TextView(null)
   }
   val r2 = ViewTree.inflateF(this, Nested) {
     case "text"     => new TextView(this)

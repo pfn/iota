@@ -202,9 +202,7 @@ private[iota] object ViewTreeMacro {
     }
   }
 
-  def inflateWithFactory[A: c.WeakTypeTag](c: Context)
-                                          (ctx: c.Expr[AndroidContext], inflater: c.Expr[Any])
-                                          (factory: c.Expr[PartialFunction[String,View]]): c.Expr[A] = {
+  def checkFactory[A: c.WeakTypeTag](c: Context)(inflater: c.Expr[Any])(factory: c.Expr[PartialFunction[String,View]]): c.Expr[PartialFunction[String,View]] = {
     import c.universe._
     val callsite = enclosingTrees(c).head
     val nowarn = callsite.symbol.annotations.exists(_.tpe =:= typeOf[ViewTree.UnsafeOperation])
@@ -265,6 +263,13 @@ private[iota] object ViewTreeMacro {
       c.abort(c.enclosingPosition, "ViewTree factory type inspection failed")
     }
 
+
+    factory
+  }
+  def inflateWithFactory[A: c.WeakTypeTag](c: Context)
+                                          (ctx: c.Expr[AndroidContext], inflater: c.Expr[Any])
+                                          (factory: c.Expr[PartialFunction[String,View]]): c.Expr[A] = {
+    checkFactory[A](c)(inflater)(factory)
     inflateBase(c)(ctx, inflater, Nil, None, Some(factory))
   }
 

@@ -536,14 +536,20 @@ private[iota] object ViewTreeMacro {
       List(ctor.asMethod)
 
     val argtypes = args.map(e => c.typeCheck(e.tree).tpe).toList
-    val hasCtor = ctors.exists { a =>
-      val ptypes = a.asMethod.paramss.head.map(_.typeSignature)
+    val matchingCtor: MethodSymbol => Boolean = a => {
+      val ptypes = a.paramss.head.map(_.typeSignature)
       val zipped = argtypes.zip(ptypes)
       zipped.size == argtypes.size && zipped.forall { case (x, y) => x weak_<:< y }
     }
+    val hasCtor = ctors.exists(matchingCtor)
+
+    val hasFallbackCtor = !hasCtor && {
+      typeOf[ViewGroup.LayoutParams].member(nme.CONSTRUCTOR).asTerm.alternatives.map(_.asMethod) exists matchingCtor
+    }
 
     // allow creating defaults for GridLayout.LayoutParams
-    if (hasCtor) {
+    // if no fallback, attempt to use real constructors for best error messages
+    if (hasCtor || !hasFallbackCtor) {
       Apply(Select(
         New(TypeTree(layoutParamType(c, op))), nme.CONSTRUCTOR), args.map(_.tree).toList)
     } else {

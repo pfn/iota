@@ -195,6 +195,7 @@ object AnotherTest extends Activity {
     text.lp(1,1,1)
   }
   case class TestGrid(container: GridLayout, text: TextView) extends ViewTree[GridLayout] {
+    text.lp(GridLayout.spec(1), GridLayout.spec(1))
     text.marginTop(10)
 
   }

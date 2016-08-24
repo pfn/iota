@@ -45,6 +45,14 @@ package object iota extends AllComponents {
     Apply(Select(reify(iota.Splicer).tree, newTermName("changeOwner")), t :: Nil)
   }
 
+  implicit class ViewMaker(val ctx: android.content.Context) extends AnyVal {
+    /** create a view `A` without specifying the `Context` and `AttributeSet` parameters
+      * e.g `ctx.make[TextView]` or `ctx.make[ProgressBar](android.R.attr.progressBarStyleSmall)`
+      */
+    def make[A <: android.view.View](args: Any*): A = macro ContextMacro.create[A]
+    def make[A <: android.view.View]:             A = macro ContextMacro.create2[A]
+  }
+
   implicit class Metrics(val size: Int) extends AnyVal {
     import android.content.{Context => AndroidContext}
     /** convert dp to pixel values */

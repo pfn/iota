@@ -22,7 +22,15 @@ object LayoutCombinators extends LayoutCombinators
 object TextCombinators extends TextCombinators
 object ViewCombinators extends ViewCombinators
 object ViewCombinatorExtras extends ViewCombinatorExtras
-object Contexts extends Contexts
+object Contexts extends Contexts {
+  implicit class ViewMaker(val ctx: Context) extends AnyVal {
+    /** create a view `A` without specifying the `Context` and `AttributeSet` parameters
+      * e.g `ctx.make[TextView]` or `ctx.make[ProgressBar](android.R.attr.progressBarStyleSmall)`
+      */
+    def make[A <: android.view.View](args: Any*): A = macro ContextMacro.create[A]
+    def make[A <: android.view.View]:             A = macro ContextMacro.create2[A]
+  }
+}
 object Themes extends Themes
 object Views extends Views with IdMacros {
   implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {

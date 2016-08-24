@@ -156,6 +156,18 @@ private[iota] object ContextMacro {
       List(TypeTree(tpe))
     ), List(Literal(Constant(service)))))
   }
+
+
+  def create[A <: android.view.View : c.WeakTypeTag](c: MacroContext)(args: c.Expr[Any]*): c.Expr[A] = {
+    import c.universe._
+    val t = weakTypeOf[A]
+    val ctx = c.prefix.tree.children.last
+    // TODO inspect ctors to see if it has necessary Context and AttributeSet params
+    // ignore, skip, etc. if not present
+    c.Expr(Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR),
+      ctx :: Literal(Constant(null)) :: (args.toList.map(_.tree) ++ Nil)))
+  }
+  def create2[A <: android.view.View : c.WeakTypeTag](c: MacroContext): c.Expr[A] = create[A](c)()
 }
 
 /** When a `android.content.Context` can't be found automatically using

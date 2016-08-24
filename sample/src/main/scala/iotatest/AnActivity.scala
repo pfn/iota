@@ -199,12 +199,14 @@ object AnotherTest extends Activity {
     text.marginTop(10)
 
   }
-  case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = new TextView(AnotherTest, null, 0), text2: TextView) extends ViewTree[RelativeLayout] {
+  case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = AnotherTest.make[TextView](0), text2: TextView) extends ViewTree[RelativeLayout] {
     text1.above(text2)
     text1.endOf(text2)
     text1.endOf(text2).alignParentEnd()
     text1.alignParentBottom()
     text1.alignWithParentIfMissing()
+    iota.std.Contexts.ViewMaker(ctx).make[Space]
+    ctx.make[Space]
     create[Space]
     create[ProgressBar](android.R.attr.progressBarStyleSmall)
     create[ProgressBar]

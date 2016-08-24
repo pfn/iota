@@ -12,43 +12,27 @@ import scala.reflect.api.Universe
 private[iota] object ViewTreeMacro {
   import scala.reflect.macros.Context
 
-  class NestingSplice[C <: Context](val c: C) extends Internal210 {
-    def splice(tree: c.Tree) = spliceTree(c)(c.internal.enclosingOwner, tree)
-  }
   def nest[B <: ViewGroup : c.WeakTypeTag](c: Context)(views: c.Expr[View]*)(body: c.Expr[Any]): c.Expr[B] = {
     import c.universe._
     val t = weakTypeOf[B]
 
-    val anonterm = newTermName(c.fresh("anonviewtree"))
     val container = newTermName("container")
     val getContext = Apply(Select(Ident(container), newTermName("getContext")), Nil)
     val contextterm = newTermName(c.fresh("context"))
+
     val nvg = Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR), Ident(contextterm):: Nil)
-    val newvgVal = ValDef(Modifiers(), container, TypeTree(t), nvg)
-    val anon = newTypeName(c.fresh("anonviewtree"))
-    val clz = Block(
+    val nvgterm = newTermName(c.fresh("viewgroup"))
+
+    c.Expr(Block(
       List(
         ValDef(Modifiers(Flag.PARAM), contextterm, TypeTree(typeOf[AndroidContext]), getContext),
-        ClassDef(Modifiers(Flag.FINAL), anon, Nil,
-          Template(
-            List(TypeTree(weakTypeOf[ViewTree[B]])),
-            emptyValDef,
-            List(
-              DefDef(Modifiers(), nme.CONSTRUCTOR, List(), List(List()), TypeTree(), Block(List(Apply(Select(Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))),
-              DefDef(Modifiers(), newTermName("productArity"), Nil, Nil, TypeTree(), Literal(Constant(0))),
-              DefDef(Modifiers(), newTermName("productElement"), Nil, List(List(ValDef(Modifiers(Flag.PARAM), newTermName("n"), TypeTree(typeOf[Int]), EmptyTree))), TypeTree(typeOf[Any]), Literal(Constant(null))),
-              newvgVal
-            ) ++ List(new NestingSplice[c.type](c).splice(body.tree))
-          )
-        ),
-        ValDef(Modifiers(Flag.PARAM), anonterm, Ident(anon),Apply(Select(New(Ident(anon)), nme.CONSTRUCTOR), Nil))
-      ) ++ views.map { v =>
-        Apply(Select(Select(Ident(anonterm), container), newTermName("addView")), List(v.tree))
-      },
-      Select(Ident(anonterm), container)
-    )
-
-    c.Expr(clz)
+        ValDef(Modifiers(), nvgterm, TypeTree(t), nvg)
+      ) ++ List(body.tree) ++
+        views.map { v =>
+          Apply(Select(Ident(nvgterm), newTermName("addView")), List(v.tree))
+        },
+      Ident(nvgterm)
+    ))
   }
 
   def inflateBase[A: c.WeakTypeTag](c: Context)(ctx: c.Expr[AndroidContext],

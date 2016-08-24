@@ -6,7 +6,7 @@ compile-time and type safety
 
 ## Features
 
-1. **Boilerplate-free layouts** - Layouts are declared fully using
+1. **[Boilerplate-free layouts](#boilerplate-free-layouts)** - Layouts are declared fully using
    plain Scala `case class`es
 2. **Automatic view "inflation"** - View objects are automatically
    created using default values, custom overrides can be provided for

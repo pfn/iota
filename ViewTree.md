@@ -101,9 +101,9 @@ import iota._
 class MainActivity extends AppCompatActivity { self =>
     lazy val views = ViewTree.inflateF(this, Main) {
         case "progress.pb1" =>
-            new ProgressBar(this, null, android.R.attr.progressBarStyleSmall)
+            this.make[ProgressBar](android.R.attr.progressBarStyleSmall)
         case "progress.pb2" =>
-            new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+            this.make[ProgressBar](android.R.attr.progressBarStyleHorizontal)
     }
     case class ProgressBars(
         container: LinearLayout,
@@ -214,7 +214,7 @@ Custom attributes or themes need to be applied? Not a problem!
 
 ```
 val themedProgressContainerOfText = ViewTree.inflateF(anyContext, ContainerOfText) {
-  case "progress" => new ProgressBar(anyContext, null, android.R.attr.progressBarStyleSmall)
+  case "progress" => anyContext.make[ProgressBar](android.R.attr.progressBarStyleSmall)
 }
 ```
 

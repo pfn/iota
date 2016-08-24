@@ -15,7 +15,7 @@ private[iota] object ViewTreeMacro {
   class NestingSplice[C <: Context](val c: C) extends Internal210 {
     def splice(tree: c.Tree) = spliceTree(c)(c.internal.enclosingOwner, tree)
   }
-  def nest[B <: ViewGroup : c.WeakTypeTag](c: Context)(views: c.Expr[View]*)(body: c.Expr[Any]): c.Expr[ViewTree[B]] = {
+  def nest[B <: ViewGroup : c.WeakTypeTag](c: Context)(views: c.Expr[View]*)(body: c.Expr[Any]): c.Expr[B] = {
     import c.universe._
     val t = weakTypeOf[B]
 
@@ -45,10 +45,10 @@ private[iota] object ViewTreeMacro {
       ) ++ views.map { v =>
         Apply(Select(Select(Ident(anonterm), container), newTermName("addView")), List(v.tree))
       },
-      Ident(anonterm)
+      Select(Ident(anonterm), container)
     )
 
-    c.Expr[ViewTree[B]](clz)
+    c.Expr(clz)
   }
 
   def inflateBase[A: c.WeakTypeTag](c: Context)(ctx: c.Expr[AndroidContext],

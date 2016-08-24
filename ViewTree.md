@@ -238,6 +238,10 @@ Layout functions can also be chained in a single expression to save time
 containerOfText.simpleText.text.matchWidth().marginLeft(8.dp).marginRight(8.dp)
 ```
 
+Keeping in with the type-safe theme, extension functions can only be used
+with the correct layout type. Incorrect usage results in a compile error as
+should be the case!
+
 ### Fully addressable
 
 As seen previously, since everything is a `case class` any view can be

@@ -290,7 +290,7 @@ result? no problem!
 
 ```
 val themedProgressContainerOfText = ViewTree.inflateF(anyContext, ContainerOfText) {
-  // OOPS! typo of 'progress'
+  // Not a ProgressBar!
   case "progress" => new TextView(anyContext, null, android.R.attr.progressBarStyleSmall)
 }
 ```

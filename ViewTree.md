@@ -22,7 +22,149 @@ compile-time and type safety
 
 This gist illustrates the layout in XML, and then in Scala using ViewTree
 
-<script src="https://gist.github.com/pfn/e82a9c11d0bd5761837037eabe6a2685.js"></script>
+In XML:
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <TextView
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:textAppearance="?android:textAppearanceLarge"
+        android:id="@+id/text"
+        android:text="Hello world ...."/>
+    <ImageView
+        android:layout_height="256dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:id="@+id/image"
+        android:srcCompat="@drawable/waving_scala_android"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content">
+      <ProgressBar
+          style="@android:style/Widget.ProgressBar.Small"
+          android:layout_width="wrap_content"
+          android:layout_width="wrap_content"/>
+      <ProgressBar
+          style="@android:style/Widget.ProgressBar.Horizontal"
+          android:indeterminate="true"
+          android:layout_width="wrap_content"
+          android:layout_width="wrap_content"/>
+      <ProgressBar
+          android:layout_width="wrap_content"
+          android:layout_width="wrap_content"/>
+    </LinearLayout>        
+    <LinearLayout
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_width="wrap_content"
+          android:layout_weight="1"
+          android:id="@+id/ok"
+          android:text="Ok"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_width="wrap_content"
+          android:layout_weight="0.5"
+          android:id="@+id/cancel"
+          android:text="Cancel"/>
+    </LinearLayout>
+</LinearLayout>
+```
+
+In Scala with ViewTree
+
+```
+package iota.sample
+
+import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
+import android.graphics.drawable.Animatable
+import android.widget._
+import android.view.ViewGroup.LayoutParams._
+import android.view.View.OnClickListener
+import iota._
+
+class MainActivity extends AppCompatActivity { self =>
+    lazy val views = ViewTree.inflateF(this, Main) {
+        case "progress.pb1" =>
+            new ProgressBar(this, null, android.R.attr.progressBarStyleSmall)
+        case "progress.pb2" =>
+            new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+    }
+    case class ProgressBars(
+        container: LinearLayout,
+        pb1: ProgressBar,
+        pb2: ProgressBar,
+        pb3: ProgressBar
+    ) extends ViewTree[LinearLayout] {
+        container.setOrientation(LinearLayout.VERTICAL)
+        pb2.setIndeterminate(true)
+    }
+    case class Main(
+        container: LinearLayout,
+        text: TextView,
+        image: ImageView,
+        progress: ProgressBars,
+        ok: Button,
+        cancel: Button
+    ) extends ViewTree[LinearLayout] {
+        container.setOrientation(LinearLayout.VERTICAL)
+
+        private[this] val buttons = nest[LinearLayout](ok, cancel) {
+          ok.lp(WRAP_CONTENT, WRAP_CONTENT, 1)
+          cancel.weight(0.5f)
+        }.container
+        buttons.lp(MATCH_PARENT, WRAP_CONTENT)
+        buttons.marginBottom(8.dp)
+        buttons.marginLeft(8.dp)
+        buttons.marginRight(8.dp)
+
+        text.lp(MATCH_PARENT, WRAP_CONTENT)
+        text.marginTop(8.dp)
+        text.marginLeft(8.dp)
+        text.setText(s"Hello world, from ${TR.string.app_name.value}")
+        text.setTextAppearance(self, android.R.style.TextAppearance_Large)
+
+        image.lp(MATCH_PARENT, 256.dp, 1) // can set weight in ctor or separate
+        image.weight(1)
+        image.setImageResource(R.drawable.waving_scala_android)
+        ok.setText("Ok")
+        cancel.setText("Cancel")
+    }
+    
+    override def onCreate(savedInstanceState: Bundle): Unit = {
+        super.onCreate(savedInstanceState)
+        setContentView(views.container)
+        views.ok.setOnClickListener(single0[OnClickListener] {
+            views.text.setText("I am OK!")
+            views.image.getDrawable match {
+              case a: Animatable => a.start()
+              case _ => // not animatable
+            }
+        })
+        views.cancel.setOnClickListener(single0[OnClickListener] {
+            views.text.setText("I have been stopped!")
+            views.image.getDrawable match {
+              case a: Animatable => a.stop()
+              case _ => // not animatable
+            }
+        })
+    }
+}
+```
 
 The code above results in the following layout:
 

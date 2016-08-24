@@ -36,6 +36,7 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
   final implicit def viewLinearLayoutExtensions  [Z <: View](v: Z): ViewLinearLayoutExtensions[Z]   = ViewLinearLayoutExtensions(v)
   final implicit def viewRelativeLayoutExtensions[Z <: View](v: Z): ViewRelativeLayoutExtensions[Z] = ViewRelativeLayoutExtensions(v)
   final implicit def viewMarginLayoutExtensions  [Z <: View](v: Z): ViewMarginLayoutExtensions[Z]   = ViewMarginLayoutExtensions(v)
+  final implicit def viewGridLayoutExtensions    [Z <: View](v: Z): ViewGridLayoutExtensions[Z]     = ViewGridLayoutExtensions(v)
   final implicit def viewGravityLayoutExtensions [Z <: View](v: Z): ViewGravityLayoutExtensions[Z]  = ViewGravityLayoutExtensions(v)
 }
 object ViewTree extends ViewTreeBoilerplate.Inflate
@@ -63,6 +64,10 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
   }
   case class ViewLinearLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[LinearLayout] {
     def weight[B <: A](value: Float)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
+  }
+  case class ViewGridLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[GridLayout] {
+    def rowSpec[B <: A](value: GridLayout.Spec)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
+    def colSpec[B <: A](value: GridLayout.Spec)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
   }
   case class ViewMarginLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutParamConstraint[ViewGroup.MarginLayoutParams] {
     // would like a margins(t,l,r,b) but macros don't support default/named args

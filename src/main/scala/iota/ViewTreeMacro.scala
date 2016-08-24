@@ -320,6 +320,8 @@ private[iota] object ViewTreeMacro {
     "wrapHeight"          -> ViewGroup.LayoutParams.WRAP_CONTENT
   )
   val layoutParamFieldOps = Map(
+    "rowSpec"             -> "rowSpec",
+    "colSpec"             -> "columnSpec",
     "matchWidth"          -> "width",
     "matchHeight"         -> "height",
     "wrapWidth"           -> "width",

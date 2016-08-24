@@ -209,6 +209,8 @@ object AnotherTest extends Activity {
       text1.gravity(0)
       if (true) {
         nest[GridLayout](text2) {
+          text2.rowSpec(GridLayout.spec(1))
+          text2.colSpec(GridLayout.spec(2))
         }
         nest[LinearLayout](text2) {
           text1.gravity(0)

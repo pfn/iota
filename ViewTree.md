@@ -127,7 +127,7 @@ class MainActivity extends AppCompatActivity { self =>
         private[this] val buttons = nest[LinearLayout](ok, cancel) {
           ok.lp(WRAP_CONTENT, WRAP_CONTENT, 1)
           cancel.weight(0.5f)
-        }.container
+        }
         buttons.lp(MATCH_PARENT, WRAP_CONTENT)
         buttons.marginBottom(8.dp)
         buttons.marginLeft(8.dp)

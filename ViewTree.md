@@ -2,7 +2,7 @@
 
 ViewTree provides a way to create Android layouts declaratively using
 simple Scala data classes with minimal boilerplate and maximal
-compile-time and type-safety
+compile-time and type safety
 
 ## Features
 

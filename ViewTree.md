@@ -281,7 +281,7 @@ val themedProgressContainerOfText = ViewTree.inflateF(anyContext, ContainerOfTex
 result? no problem!
 
 ```
-[error] layoutfile.scala:LINE#: not found in class ContainerOfText: pattern 'progress'
+[error] layoutfile.scala:LINE#: not found in class ContainerOfText: pattern 'progres'
 [error]     case "progres" => new ProgressBar(anyContext, null, android.R.attr.progressBarStyleSmall)
 [error]
 ```

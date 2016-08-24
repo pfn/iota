@@ -34,6 +34,16 @@ private[iota] object ViewTreeMacro {
       Ident(nvgterm)
     ))
   }
+  def create[B <: View : c.WeakTypeTag](c: Context)(args: c.Expr[Any]*): c.Expr[B] = {
+    import c.universe._
+    val t = weakTypeOf[B]
+    val getContext = Apply(Select(Ident(newTermName("container")), newTermName("getContext")), Nil)
+    // TODO inspect ctors to see if it has necessary Context and AttributeSet params
+    // ignore, skip, etc. if not present
+    c.Expr(Apply(Select(New(TypeTree(t)), nme.CONSTRUCTOR),
+      getContext :: Literal(Constant(null)) :: (args.toList.map(_.tree) ++ Nil)))
+  }
+  def create2[B <: View : c.WeakTypeTag](c: Context): c.Expr[B] = create[B](c)()
 
   def inflateBase[A: c.WeakTypeTag](c: Context)(ctx: c.Expr[AndroidContext],
                                                 inflater: c.Expr[Any],

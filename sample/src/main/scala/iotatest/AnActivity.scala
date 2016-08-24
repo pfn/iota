@@ -205,6 +205,9 @@ object AnotherTest extends Activity {
     text1.endOf(text2).alignParentEnd()
     text1.alignParentBottom()
     text1.alignWithParentIfMissing()
+    create[Space]
+    create[ProgressBar](android.R.attr.progressBarStyleSmall)
+    create[ProgressBar]
     nest[FrameLayout](text1) {
       text1.gravity(0)
       if (true) {

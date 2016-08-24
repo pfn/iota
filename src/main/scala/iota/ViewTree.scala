@@ -27,7 +27,18 @@ trait ViewTree[A <: ViewGroup] extends Iterable[ViewTree.Children] with Product 
     }
   }
 
+  /** create an anonymous viewgroup `B`, allows inserting a level in the view hierarchy without
+    * having to explicitly nest ViewTree classes, `views` will be added to the new `B`
+    * automatically. Anything in `{ body }` will be executed in the context of `B`, such as layout
+    * parameter settings
+    */
   def nest[B <: ViewGroup](views: View*)(body: Any): B = macro ViewTreeMacro.nest[B]
+
+  /** create an anonymous view `B` without specifying the `Context` and `AttributeSet` parameters
+    * e.g `create[TextView]` or `create[ProgressBar](android.R.attr.progressBarStyleSmall)`
+    */
+  def create[B <: View](args: Any*): B = macro ViewTreeMacro.create[B]
+  def create[B <: View]:             B = macro ViewTreeMacro.create2[B]
 
   val container: A
 

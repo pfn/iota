@@ -20,7 +20,8 @@ compile-time and type safety
    
 ### Example
 
-This gist illustrates the layout in XML, and then in Scala using ViewTree
+These code examples illustrate creating a layout in XML, and then doing
+the same thing in Scala using ViewTree
 
 In XML:
 

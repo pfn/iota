@@ -104,10 +104,21 @@ private[iota] object ViewTreeMacro {
               f.splice.apply(key.splice).getOrElse(viewExpr.splice)
             }
             val tpe = c.Expr[String](Literal(Constant(t.toString)))
-            val facOut = c.Expr[View](TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t))))
+            val facOut = TypeApply(Select(withfactory.tree, newTermName("asInstanceOf")), List(TypeTree(t)))
+            val facterm = newTermName(c.fresh())
+            val facblock = c.Expr[View](Block(
+              List(
+                ValDef(Modifiers(Flag.PARAM), facterm, TypeTree(), facOut),
+                If(
+                  Apply(Select(Ident(facterm), newTermName("$eq$eq")), List(Literal(Constant(null)))),
+                  reify(throw new NullPointerException(s"'${key.splice}' resulted in a null value")).tree,
+                  Literal(Constant(())))
+              ),
+              Ident(facterm)
+            ))
             reify {
               try {
-                facOut.splice
+                facblock.splice
               } catch {
                 case e: ClassCastException =>
                   val ex = new ClassCastException(s"Failed to cast '${key.splice}' to ${tpe.splice}")

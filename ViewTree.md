@@ -8,14 +8,14 @@ compile-time and type safety
 
 1. **[Boilerplate-free layouts](#boilerplate-free-layouts)** - Layouts are declared fully using
    plain Scala `case class`es
-2. **Automatic view "inflation"** - View objects are automatically
+2. **[Automatic view "inflation"](#automatic-view-inflation)** - View objects are automatically
    created using default values, custom overrides can be provided for
    styling and theming easily
-2. **Simple and fluent layout extension functions** - set `LayoutParams`
+2. **[Simple and fluent layout extension functions](#simple-and-fluent-layout-extension-functions)** - set `LayoutParams`
    on your views quickly and easily
-3. **Type-safe and null-safe** - all layout views are fully known at
+3. **[Type-safe and null-safe](#type-safe-and-null-safe)** - all layout views are fully known at
    compile-time and completely avoid the `findViewById` of doom
-4. **Fully addressable** - views are fully navigable as they form a
+4. **[Fully addressable](#fully-addressable)** - views are completely navigable as they form a
    tree structure of type-safe data classes   
    
 ### Example

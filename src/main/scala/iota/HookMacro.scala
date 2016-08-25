@@ -26,8 +26,8 @@ private[iota] object HookMacro {
     helper.applyHookM(event)(handler)
   }
 
+  val OBJECT_FUNCTIONS = Set("clone", "toString", "hashCode", "equals", "finalize", "getClass")
   private[iota] class HookMacro[C <: Context](val c: C) extends ListenerMacros[C] {
-    private val OBJECT_FUNCTIONS = Set("clone", "toString", "hashCode", "equals", "finalize")
 
     import c.universe._
 
@@ -117,7 +117,7 @@ private[iota] trait ListenerMacros[C <: Context] extends Internal210 {
   val c: C
   import c.universe._
 
-  def newListenerClass(tpe: Type, sym: MethodSymbol, handler: Tree, overrides: List[MethodSymbol], handleArgs: Boolean = false, handleIO: Boolean = true) = {
+  def newListenerClass(tpe: Type, overrides: List[MethodSymbol], impl: DefDef): Block = {
     val listenerTypeName = c.fresh("$anon")
     Block(
       List(
@@ -125,26 +125,29 @@ private[iota] trait ListenerMacros[C <: Context] extends Internal210 {
           Modifiers(Flag.FINAL), newTypeName(listenerTypeName), List(),
           Template(
             List(TypeTree(tpe)), emptyValDef,
-            List(
-              DefDef(
-                Modifiers(), nme.CONSTRUCTOR, List(), List(List()), TypeTree(),
-                Block(
-                  List(
-                    Apply(
-                      Select(
-                        Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR
-                      ), List()
-                    )
-                  ), Literal(Constant(()))
-                )
-              ), newListenerMethod(sym, handler, handleArgs, handleIO)
-            ) ++ newListenerOverrides(overrides)
+            DefDef(
+              Modifiers(), nme.CONSTRUCTOR, List(), List(List()), TypeTree(),
+              Block(
+                List(
+                  Apply(
+                    Select(
+                      Super(This(tpnme.EMPTY), tpnme.EMPTY), nme.CONSTRUCTOR
+                    ), List()
+                  )
+                ), Literal(Constant(()))
+              )
+            ) ::
+              impl ::
+              newListenerOverrides(overrides)
           )
 
         )
       ),
       Apply(Select(New(Ident(newTypeName(listenerTypeName))), nme.CONSTRUCTOR), List())
     )
+  }
+  def newListenerClass(tpe: Type, sym: MethodSymbol, handler: Tree, overrides: List[MethodSymbol], handleArgs: Boolean = false, handleIO: Boolean = true): Block = {
+    newListenerClass(tpe, overrides, newListenerMethod(sym, handler, handleArgs, handleIO))
   }
 
   // semi-copied from TreeGen

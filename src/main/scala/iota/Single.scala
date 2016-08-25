@@ -75,15 +75,18 @@ private[iota] object SingleMacro {
 
     import c.universe._
 
+    def needImplementation(listener: Type): List[MethodSymbol] = {
+      if (!listener.typeSymbol.asClass.isAbstractClass) Nil
+      else listener.members.collect {
+        case m: MethodSymbol if !m.isFinal && m.isJava && !m.isConstructor && !OBJECT_FUNCTIONS(m.name.encoded) =>
+          m
+      }.toList
+    }
     def callbackPartsFor[V: c.WeakTypeTag](e: Option[String]) = {
       val listener = weakTypeOf[V]
 
       // hack for partially implemented listeners, until we move to 2.11 only and can use isAbstract
-      val toImplement = if (!listener.typeSymbol.asClass.isAbstractClass) Nil
-      else listener.members.collect {
-        case m: MethodSymbol if !m.isFinal && m.isJava && !m.isConstructor && !OBJECT_FUNCTIONS(m.name.encoded) =>
-          m
-      }
+      val toImplement = needImplementation(listener)
 
       val on = e.map { x =>
         val onMethod = x

@@ -80,7 +80,7 @@ object ListenersMacro {
         newListenerMethod(c)(m,
           Ident(p.name),
           !p.isByNameParam))
-      val body = Apply(Select(Ident(target.name), setsym.get.name.toTermName), listener :: Nil)
+      val body = Apply(Select(Ident(target.name), setter.name.toTermName), listener :: Nil)
       DefDef(
         Modifiers(),
         ti.name,
@@ -106,7 +106,6 @@ object ListenersMacro {
       ),
       ValDef(Modifiers(Flag.PARAM), anonterm, AppliedTypeTree(Ident(targetTpe.typeSymbol.name), TypeTree(viewType) :: Nil),Apply(Select(New(Ident(anon)), nme.CONSTRUCTOR), Nil))
     ), Ident(anonterm)))
-    c.typeCheck(x.tree)
     x
   }
   def newListenerMethod(c: Context)(sym: c.universe.MethodSymbol, handler: c.Tree, handleArgs: Boolean) = {

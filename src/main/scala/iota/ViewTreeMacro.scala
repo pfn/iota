@@ -394,8 +394,11 @@ private[iota] object ViewTreeMacro {
     }
   }
 
-  def typeParamOf(c: Context)(p: c.Type) = p match {
-    case c.universe.TypeRef(_, _, arg :: Nil) =>  arg
+  def typeParamOf(c: Context)(p: c.Type) = {
+    import c.universe._
+    p match {
+      case TypeRef(_, _, arg :: Nil) =>  arg
+    }
   }
 
   def checkLayoutConstraint(c: Context)(op: String, lpt: c.Type): Unit = {
@@ -519,7 +522,6 @@ private[iota] object ViewTreeMacro {
 
   def layoutType(c: Context, op: String): c.Type = {
     import c.universe._
-    val vgt = c.weakTypeOf[ViewGroup]
     val vtt = typeOf[ViewTree[_]]
     val vts = c.enclosingClass.symbol.typeSignature.baseType(vtt.typeSymbol)
 

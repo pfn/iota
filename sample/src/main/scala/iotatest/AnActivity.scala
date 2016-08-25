@@ -200,6 +200,13 @@ object AnotherTest extends Activity {
 
   }
   case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = AnotherTest.make[TextView](0), text2: TextView) extends ViewTree[RelativeLayout] {
+    import Listeners._
+    import Listeners.IotaExtensionMaterializers._
+    materializeOnClickable[View]
+//    Listeners.AnyOnClickable(text1).onClick("foo")
+
+//    Listeners.AnyOnClickable(1).onClick("foo")
+//    Listeners.AnyOnClickable("foo").onClick("foo")
     text1.above(text2)
     text1.endOf(text2)
     text1.endOf(text2).alignParentEnd()
@@ -259,3 +266,27 @@ object AnotherTest extends Activity {
 package foo {
   case class Bugger2(container: LinearLayout, text: TextView, str: Option[String]) extends ViewTree[LinearLayout]
 }
+
+object Foo {
+  import Listeners._
+  import Listeners.IotaExtensionMaterializers._
+
+//  FooExt.Mat2.materialize[Option[String]]
+//  materializeOnClickable[View]
+//  materializeOnTouchable[View]
+  val view = new View(null)
+  val text = new TextView(null)
+  text.onClick { () }
+  text.onClickEx { view => "" }
+  text.onTextChange { () }
+  text.onTouchEx { (a, b) => true }
+  text.onTouch { true }
+}
+
+//object FooExt {
+//  import language.experimental.macros
+//  object Mat2 {
+//    implicit def materialize[A]: Option[A] = macro ListenersMacro.materializeAny[Option,A]
+//  }
+//}
+

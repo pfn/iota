@@ -28,7 +28,6 @@ import iota.effect._
 /**
  * @author pfnguyen
  */
-/*
 class AnActivity extends Activity {
 
   import ViewGroup.LayoutParams._
@@ -36,7 +35,7 @@ class AnActivity extends Activity {
 
   val fl = new FrameLayout(this)
   val weirdMatchP = 2
-  val firstlayout = (IO(new FrameLayout(this)) >>= ViewCombinatorExtras.gone)(
+  val firstlayout = (IO(new FrameLayout(this)) >>= module.ViewCombinatorExtras.gone)(
     IO(new TextView(this)) >>= lp(MATCH_PARENT, weirdMatchP) >>= kestrel { t => t.setText("HI") } >>= id(Id.firsttext),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)((p: ViewGroup.MarginLayoutParams) => 9) >>= k.text("Yo"),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)(margins(all = 5.dp)),
@@ -45,7 +44,7 @@ class AnActivity extends Activity {
   )
 //  materializeIdType
 
-  import iota.std.MainThreadExecutionContext
+  import iota.module.MainThreadExecutionContext
   val x = w[TextView] >>= k.visibility(if (true) 1 else 2) >>=
     animate(_.alpha(0)) >>= defer(k.text("Alpha 0")) >>=
     deferF(animate(_.alpha(1))) >>= defer(k.text("Alpha 1"))
@@ -97,24 +96,22 @@ class AnActivity extends Activity {
   val error = 1
 
   w[TextView] >>= id(android.R.id.background)
-
   findView(android.R.id.background)
   w[TextView] >>= id(error)
 
   systemService[android.app.NotificationManager].notify(1, null)
   def f(): Unit = {
-    val f1 = 2
-    w[TextView] >>= id(f1)
+//    val f1 = 2
+//    w[TextView] >>= id(f1)
 
-    findView(f1)
-    w[ImageView] >>= id(f1)
+//    findView(f1)
+//    w[ImageView] >>= id(f1)
     w[ImageView] >>= id(3)
-    w[ImageButton] >>= id(3)
+//    w[ImageButton] >>= id(3)
 
     (findView(3) : ImageView).setImageResource(0)
   }
 }
-*/
 
 class Frag extends android.app.Fragment {
   materializeContext.getSystemService(android.content.Context.NOTIFICATION_SERVICE)

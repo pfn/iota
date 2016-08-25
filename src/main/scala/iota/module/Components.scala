@@ -1,4 +1,4 @@
-package iota.std
+package iota.module
 
 import android.content.Context
 import iota._

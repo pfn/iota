@@ -100,15 +100,11 @@ private[iota] object HookMacro {
 
     def newKestrel(tpe: Type, method: String, handler: Tree) = {
       val vparam = c.fresh()
-      Apply(
-        Select(Ident(newTermName("iota")), newTermName("kestrel")),
-        List(
-          Function(
-            List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
-            Apply(Select(Ident(newTermName(vparam)), newTermName(method)), List(handler))
-          )
-        )
-      )
+      val f = c.Expr(Function(
+          List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
+          Apply(Select(Ident(newTermName(vparam)), newTermName(method)), List(handler))
+        ))
+      reify(iota.module.Combinators.kestrel(f.splice)).tree
     }
   }
 }

@@ -171,7 +171,7 @@ private[iota] object ContextMacro {
 }
 
 /** When a `android.content.Context` can't be found automatically using
-  * the implicits in `iota._` or `iota.std.Contexts._` implement this trait
+  * the implicits in `iota._` or `Contexts._` implement this trait
   * to help the implicit out
   */
 trait HasContext {
@@ -179,7 +179,7 @@ trait HasContext {
 }
 
 /** When an `android.app.Activity` can't be found automatically using
-  * the implicits in `iota._` or `iota.std.Contexts._` implement this trait
+  * the implicits in `iota._` or `Contexts._` implement this trait
   * to help the implicit out
   */
 trait HasActivity {

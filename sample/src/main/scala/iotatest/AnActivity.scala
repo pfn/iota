@@ -8,6 +8,7 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.view.{Gravity, View, ViewGroup}
 import android.widget._
+import iota.module.Contexts
 
 import scala.concurrent.Future
 
@@ -35,7 +36,7 @@ class AnActivity extends Activity {
 
   val fl = new FrameLayout(this)
   val weirdMatchP = 2
-  val firstlayout = (IO(new FrameLayout(this)) >>= iota.std.ViewCombinatorExtras.gone)(
+  val firstlayout = (IO(new FrameLayout(this)) >>= ViewCombinatorExtras.gone)(
     IO(new TextView(this)) >>= lp(MATCH_PARENT, weirdMatchP) >>= kestrel { t => t.setText("HI") } >>= id(Id.firsttext),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)((p: ViewGroup.MarginLayoutParams) => 9) >>= k.text("Yo"),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)(margins(all = 5.dp)),
@@ -213,7 +214,7 @@ object AnotherTest extends Activity {
     text1.endOf(text2).alignParentEnd()
     text1.alignParentBottom()
     text1.alignWithParentIfMissing()
-    iota.std.Contexts.ViewMaker(ctx).make[Space]
+    Contexts.ViewMaker(ctx).make[Space]
     ctx.make[Space]
     create[Space]
     create[ProgressBar](android.R.attr.progressBarStyleSmall)

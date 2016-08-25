@@ -53,7 +53,7 @@ private[iota] object IOViewGroupMacro {
     c.abort(c.enclosingPosition, tpe + " does not have a LayoutParams nested class")
   )
 
-  class LpTransformer[C <: Context](val c: C) extends Internal210 with Combinators {
+  class LpTransformer[C <: Context](val c: C) extends Internal210 {
     import c.universe._
     def isInIota(id: Tree) = {
       id.symbol.owner.name.encoded == "iota" || id.symbol.owner.owner.name.encoded == "iota"
@@ -69,7 +69,7 @@ private[iota] object IOViewGroupMacro {
                   ys.map(spliceTree(c)(c.internal.enclosingOwner, _))))
                 val xbody = spliceTree(c)(c.internal.enclosingOwner, xs.head)
                 c.internal.typingTransform(reify {
-                  kestrel { (v: View) =>
+                  iota.module.Combinators.kestrel { (v: View) =>
                     val iota$generatedLayoutParams$1 = lp.splice
                     c.Expr[Any => Any](xbody).splice.apply(iota$generatedLayoutParams$1)
                     v.setLayoutParams(iota$generatedLayoutParams$1)
@@ -80,7 +80,7 @@ private[iota] object IOViewGroupMacro {
                   New(TypeTree(lpType)), nme.CONSTRUCTOR),
                   xs.map(spliceTree(c)(c.internal.enclosingOwner, _))))
                 c.internal.typingTransform(reify {
-                  kestrel { (v: View) =>
+                  iota.module.Combinators.kestrel { (v: View) =>
                     v.setLayoutParams(lp.splice)
                   }
                 }.tree) { (tree, api) => api.typecheck(tree) }

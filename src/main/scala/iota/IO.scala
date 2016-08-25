@@ -15,7 +15,7 @@ final class IO[+A] private(val perform: () => A) {
   def >>=[B](f: A => IO[B]): IO[B] = IO(f(perform()).perform())
 
   /** execute side-effects on UI thread */
-  def performMain(): Future[A] = Future(perform())(std.MainThreadExecutionContext)
+  def performMain(): Future[A] = Future(perform())(module.MainThreadExecutionContext)
 }
 
 object IO {

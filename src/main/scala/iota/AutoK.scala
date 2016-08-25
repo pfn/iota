@@ -1,5 +1,7 @@
 package iota
 
+import iota.module.Combinators
+
 import scala.reflect.macros.Context
 
 /**
@@ -70,7 +72,7 @@ private[iota] object AutoKMacro {
         List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
         Apply(Select(Ident(newTermName(vparam)), newTermName(method)), args.map(_.tree).toList)
       ))
-      reify(iota.std.Combinators.kestrel(f.splice)).tree
+      reify(Combinators.kestrel(f.splice)).tree
     }
   }
 }

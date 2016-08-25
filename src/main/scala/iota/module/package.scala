@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext
 /**
   * @author pfnguyen
   */
-package object std {
+package object module {
 
   /** UI execution context, use with combinators such as `defer` and `deferF`
     */

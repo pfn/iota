@@ -49,3 +49,9 @@ scalacOptions ++= "-deprecation" ::
 //  "-uniqid" ::
   Nil
 
+//scalacOptions in sample ++=
+//    "-Xprint:typer" ::
+//    "-Xprint-types" ::
+//    "-uniqid" ::
+//  Nil
+

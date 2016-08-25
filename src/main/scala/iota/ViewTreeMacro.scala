@@ -394,23 +394,24 @@ private[iota] object ViewTreeMacro {
     }
   }
 
+  def typeParamOf(c: Context)(p: c.Type) = p match {
+    case c.universe.TypeRef(_, _, arg :: Nil) =>  arg
+  }
+
   def checkLayoutConstraint(c: Context)(op: String, lpt: c.Type): Unit = {
     import c.universe._
     val lt = layoutType(c, op)
-    val vgt = typeOf[ViewGroup]
-    val vglpt = typeOf[ViewGroup.LayoutParams]
     val lpc = typeOf[ViewTree.LayoutParamConstraint[_]]
     val lc = typeOf[ViewTree.LayoutConstraint[_]]
     val lc2 = typeOf[ViewTree.LayoutConstraint2[_]]
     val owner = c.macroApplication.symbol.owner
     val lpcType = owner.typeSignature.baseType(lpc.typeSymbol)
-    def typeParamOf(p: Type, base: Type): Type = p.find(_ <:< base).get
-    if (lpcType != NoType && !(lpt <:< typeParamOf(lpcType, vglpt))) {
-      c.abort(c.macroApplication.pos, s"$op cannot be used in $lpt only in ${typeParamOf(lpcType, vglpt)}")
+    if (lpcType != NoType && !(lpt <:< typeParamOf(c)(lpcType))) {
+      c.abort(c.macroApplication.pos, s"$op cannot be used in $lpt only in ${typeParamOf(c)(lpcType)}")
     }
     val lcType = owner.typeSignature.baseType(lc.typeSymbol)
     val lc2Type = owner.typeSignature.baseType(lc2.typeSymbol)
-    val lcs = List(lcType, lc2Type).filter(_ != NoType).map(typeParamOf(_, vgt))
+    val lcs = List(lcType, lc2Type).filter(_ != NoType).map(x => typeParamOf(c)(x))
     if (lcs.nonEmpty && !lcs.exists(lt <:< _)) {
       c.abort(c.macroApplication.pos, s"'.$op' cannot be used in $lt only in ${lcs.mkString(" or ")}")
     }
@@ -442,7 +443,7 @@ private[iota] object ViewTreeMacro {
     ))
   }
 
-  def layoutParamField[A, B <: A : c.WeakTypeTag](c: Context)(value: c.Expr[Any])(ev: c.Expr[B =:= A]): c.Expr[B] = {
+  def layoutParamField[A : c.WeakTypeTag](c: Context)(value: c.Expr[Any]): c.Expr[A] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val intParam: Tree => Tree  = t =>
@@ -450,10 +451,10 @@ private[iota] object ViewTreeMacro {
     withLayoutParams(c)(op, lpt, intParam :: Nil, Nil)
   }
 
-  def layoutParamField2[A, B <: A : c.WeakTypeTag](c: Context)()(ev: c.Expr[B =:= A]): c.Expr[B] = {
+  def layoutParamField2[A : c.WeakTypeTag](c: Context)(): c.Expr[A] = {
     import c.universe._
     val (op, _) = commonLayoutConstraints(c)
-    layoutParamField(c)(c.Expr(Literal(Constant(matchWrapValues(op)))))(ev)
+    layoutParamField(c)(c.Expr(Literal(Constant(matchWrapValues(op)))))
   }
 
   def withTargetApi[B: c.WeakTypeTag](c: Context)(tree: c.Expr[B], view: c.Expr[B]): c.Expr[B] = {
@@ -481,7 +482,7 @@ private[iota] object ViewTreeMacro {
     (op, lpt)
   }
 
-  def relativeLayoutParamView[A, B <: A : c.WeakTypeTag](c: Context)(view: c.Expr[View])(ev: c.Expr[B =:= A]): c.Expr[B] = {
+  def relativeLayoutParamView[A : c.WeakTypeTag](c: Context)(view: c.Expr[View]): c.Expr[A] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val ensureId = reify {
@@ -499,7 +500,7 @@ private[iota] object ViewTreeMacro {
     withTargetApi(c)(x, c.Expr(c.prefix.tree.children.last))
   }
 
-  def relativeLayoutUnary[A, B <: A : c.WeakTypeTag](c: Context)()(ev: c.Expr[B =:= A]): c.Expr[B] = {
+  def relativeLayoutUnary[A : c.WeakTypeTag](c: Context)(): c.Expr[A] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val addRule: Tree => Tree = t =>
@@ -508,7 +509,7 @@ private[iota] object ViewTreeMacro {
     withTargetApi(c)(x, c.Expr(c.prefix.tree.children.last))
   }
 
-  def relativeLayoutAlignParent[A, B <: A : c.WeakTypeTag](c: Context)()(ev: c.Expr[B =:= A]): c.Expr[B] = {
+  def relativeLayoutAlignParent[A : c.WeakTypeTag](c: Context)(): c.Expr[A] = {
     import c.universe._
     val (op, lpt) = commonLayoutConstraints(c)
     val addRule: Tree => Tree = t =>
@@ -524,7 +525,7 @@ private[iota] object ViewTreeMacro {
 
     if (vts == NoType)
       c.abort(c.enclosingPosition, s"'$op' can only be used in a subclass of iota.ViewTree")
-    findNestLayoutOf(c).orElse(vts.find(_ <:< vgt)).get
+    findNestLayoutOf(c).getOrElse(typeParamOf(c)(vts)).get
   }
 
   def layoutParamType(c: Context, op: String): c.Type =
@@ -569,12 +570,12 @@ private[iota] object ViewTreeMacro {
     }
   }
 
-  def lp[A,B <: A : c.WeakTypeTag](c: Context)(args: c.Expr[Any]*)(ev: c.Expr[B =:= A]): c.Expr[B] = {
+  def lp[A : c.WeakTypeTag](c: Context)(args: c.Expr[Any]*): c.Expr[A] = {
     import c.universe._
     val view = c.prefix.tree.children.last
     val lp = makeLp(c, "lp")(args:_*)
     val vterm = newTermName(c.fresh("view"))
-    val vdef = ValDef(Modifiers(Flag.PARAM), vterm, TypeTree(c.weakTypeOf[B]), view)
+    val vdef = ValDef(Modifiers(Flag.PARAM), vterm, TypeTree(c.weakTypeOf[A]), view)
     c.Expr(Block(List(vdef, Apply(Select(view, newTermName("setLayoutParams")), List(lp))), Ident(vterm)))
   }
 }

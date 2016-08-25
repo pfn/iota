@@ -64,58 +64,58 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
       * If `lp` is not called, any layout decorator call will insert default
       * LayoutParams. Default LayoutParams have WRAP_CONTENT for both width and height
       */
-    def lp         [B <: A](args: Any*)(implicit ev: B =:= A): B = macro ViewTreeMacro.lp[A,B]
-    def matchWidth [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField2[A,B]
-    def matchHeight[B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField2[A,B]
-    def wrapWidth  [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField2[A,B]
-    def wrapHeight [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField2[A,B]
+    def lp         (args: Any*): A = macro ViewTreeMacro.lp[A]
+    def matchWidth ():           A = macro ViewTreeMacro.layoutParamField2[A]
+    def matchHeight():           A = macro ViewTreeMacro.layoutParamField2[A]
+    def wrapWidth  ():           A = macro ViewTreeMacro.layoutParamField2[A]
+    def wrapHeight ():           A = macro ViewTreeMacro.layoutParamField2[A]
   }
   case class ViewGravityLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[LinearLayout] with LayoutConstraint2[FrameLayout] {
-    def gravity[B <: A](value: Int)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
+    def gravity(value: Int): A = macro ViewTreeMacro.layoutParamField[A]
   }
   case class ViewLinearLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[LinearLayout] {
-    def weight[B <: A](value: Float)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
+    def weight(value: Float): A = macro ViewTreeMacro.layoutParamField[A]
   }
   case class ViewGridLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[GridLayout] {
-    def rowSpec[B <: A](value: GridLayout.Spec)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
-    def colSpec[B <: A](value: GridLayout.Spec)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
+    def rowSpec(value: GridLayout.Spec): A = macro ViewTreeMacro.layoutParamField[A]
+    def colSpec(value: GridLayout.Spec): A = macro ViewTreeMacro.layoutParamField[A]
   }
   case class ViewMarginLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutParamConstraint[ViewGroup.MarginLayoutParams] {
     // would like a margins(t,l,r,b) but macros don't support default/named args
-    def marginLeft  [B <: A](value: Int)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
-    def marginTop   [B <: A](value: Int)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
-    def marginBottom[B <: A](value: Int)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
-    def marginRight [B <: A](value: Int)(implicit ev: B =:= A): B = macro ViewTreeMacro.layoutParamField[A,B]
+    def marginLeft  (value: Int): A = macro ViewTreeMacro.layoutParamField[A]
+    def marginTop   (value: Int): A = macro ViewTreeMacro.layoutParamField[A]
+    def marginBottom(value: Int): A = macro ViewTreeMacro.layoutParamField[A]
+    def marginRight (value: Int): A = macro ViewTreeMacro.layoutParamField[A]
   }
   case class ViewRelativeLayoutExtensions[A <: View](v: View) extends AnyVal with LayoutConstraint[RelativeLayout] {
-    def above                   [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def alignBaseLine           [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def alignBottom             [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def above                   (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def alignBaseLine           (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def alignBottom             (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
     @TargetApi(17)
-    def alignEnd                [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def alignLeft               [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def alignParentBottom       [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def alignEnd                (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def alignLeft               (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def alignParentBottom       (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
     @TargetApi(17)
-    def alignParentEnd          [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
-    def alignParentLeft         [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
-    def alignParentRight        [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def alignParentEnd          (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
+    def alignParentLeft         (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
+    def alignParentRight        (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
     @TargetApi(17)
-    def alignParentStart        [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
-    def alignParentTop          [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
-    def alignRight              [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def alignWithParentIfMissing[B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutAlignParent[A,B]
+    def alignParentStart        (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
+    def alignParentTop          (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
+    def alignRight              (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def alignWithParentIfMissing(): A = macro ViewTreeMacro.relativeLayoutAlignParent[A]
     @TargetApi(17)
-    def alignStart              [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def alignTop                [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def below                   [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def centerHorizontal        [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
-    def centerInParent          [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
-    def centerVertical          [B <: A]()(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutUnary[A,B]
+    def alignStart              (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def alignTop                (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def below                   (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def centerHorizontal        (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
+    def centerInParent          (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
+    def centerVertical          (): A = macro ViewTreeMacro.relativeLayoutUnary[A]
     @TargetApi(17)
-    def endOf                   [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def leftOf                  [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
-    def rightOf                 [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def endOf                   (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def leftOf                  (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
+    def rightOf                 (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
     @TargetApi(17)
-    def startOf                 [B <: A](view: View)(implicit ev: B =:= A): B = macro ViewTreeMacro.relativeLayoutParamView[A,B]
+    def startOf                 (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
   }
 }

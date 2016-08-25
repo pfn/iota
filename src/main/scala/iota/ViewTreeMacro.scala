@@ -525,7 +525,7 @@ private[iota] object ViewTreeMacro {
 
     if (vts == NoType)
       c.abort(c.enclosingPosition, s"'$op' can only be used in a subclass of iota.ViewTree")
-    findNestLayoutOf(c).getOrElse(typeParamOf(c)(vts)).get
+    findNestLayoutOf(c).getOrElse(typeParamOf(c)(vts))
   }
 
   def layoutParamType(c: Context, op: String): c.Type =

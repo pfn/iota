@@ -20,6 +20,7 @@ import scala.concurrent.Future
 //import Contexts._
 
 import iota._
+import iota.effect._
 //import iota.IO
 //import iota.WithContext
 

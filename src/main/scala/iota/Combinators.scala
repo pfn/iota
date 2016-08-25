@@ -42,7 +42,7 @@ private[iota] trait FutureCombinators {
   }
 }
 
-private[iota] trait ViewCombinators {
+private[iota] trait ViewCombinators extends Combinators {
   def id[A <: View](id: Int): Kestrel[A] = macro IdMacros.tIdImpl[A]
 
   def padding[A <: View](left:   Int = 0,
@@ -118,7 +118,7 @@ private[iota] trait ViewCombinators {
   }
 }
 
-private[iota] trait ViewCombinatorExtras {
+private[iota] trait ViewCombinatorExtras extends Combinators {
   def visibility[A <: View](visibility: Int): Kestrel[A] =
     kestrel(_.setVisibility(visibility))
   def gone[A <: View]:      Kestrel[A] = visibility(View.GONE)
@@ -181,7 +181,7 @@ private[iota] trait LayoutCombinators {
   final def lpK[V <: View,A,B](args: Any*)(k: A => B): Kestrel[V] = ???
 }
 
-private[iota] trait TextCombinators {
+private[iota] trait TextCombinators extends Combinators {
   def text[A <: TextView](text: CharSequence): Kestrel[A] = kestrel(_.setText(text))
   def text[A <: TextView](text: Int):          Kestrel[A] = kestrel(_.setText(text))
 
@@ -200,7 +200,7 @@ private[iota] trait TextCombinators {
   def textAppearance[A <: TextView](resid: Int): Kestrel[A] = kestrel(tv => tv.setTextAppearance(tv.getContext, resid))
 }
 
-private[iota] trait ImageCombinators {
+private[iota] trait ImageCombinators extends Combinators {
   def imageResource[A <: ImageView](resid: Int): Kestrel[A] = kestrel(_.setImageResource(resid))
   def imageScale[A <: ImageView](scaleType: ImageView.ScaleType): Kestrel[A] = kestrel(_.setScaleType(scaleType))
 }

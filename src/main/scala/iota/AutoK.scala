@@ -66,15 +66,11 @@ private[iota] object AutoKMacro {
 
     def newKestrel(tpe: Type, method: String, args: Seq[c.Expr[Any]]) = {
       val vparam = c.fresh()
-      Apply(
-        Select(Ident(newTermName("iota")), newTermName("kestrel")),
-        List(
-          Function(
-            List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
-            Apply(Select(Ident(newTermName(vparam)), newTermName(method)), args.map(_.tree).toList)
-          )
-        )
-      )
+      val f = c.Expr(Function(
+        List(ValDef(Modifiers(Flag.PARAM), newTermName(vparam), TypeTree(tpe), EmptyTree)),
+        Apply(Select(Ident(newTermName(vparam)), newTermName(method)), args.map(_.tree).toList)
+      ))
+      reify(iota.std.Combinators.kestrel(f.splice)).tree
     }
   }
 }

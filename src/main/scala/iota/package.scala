@@ -8,18 +8,10 @@ import scala.reflect.ClassTag
  */
 package iota {
 private[iota] trait AllComponents
-  extends Combinators
-  with AutoK
-  with Single
-  with IdMacros
-  with Views
-  with TernaryOps
+  extends Single
   with Contexts
   with Themes
   with Configurations
-  with FutureCombinators
-  with ViewCombinators
-  with LayoutCombinators
 }
 package object iota extends AllComponents {
   type Kestrel[A] = A => IO[A]
@@ -83,4 +75,16 @@ package object iota extends AllComponents {
     @inline final def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int): Option[A] =
       Option(vg.findViewById(id).asInstanceOf[A])
   }
+}
+
+package iota {
+package object effect
+  extends Combinators
+    with ViewCombinators
+    with AutoK
+    with IdMacros
+    with Views
+    with TernaryOps
+    with FutureCombinators
+    with LayoutCombinators
 }

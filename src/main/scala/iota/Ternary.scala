@@ -3,7 +3,7 @@ package iota
 /**
   * @author pfnguyen
   */
-private[iota] trait TernaryOps {
+private[iota] trait TernaryOps extends Combinators {
   /** create a K-combinator based on a ternary expression.
     *  for example: `condK(istrue ? (yes => IO[yes]) | (no => IO[no]))`
     */

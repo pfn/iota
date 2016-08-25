@@ -53,7 +53,7 @@ private[iota] object IOViewGroupMacro {
     c.abort(c.enclosingPosition, tpe + " does not have a LayoutParams nested class")
   )
 
-  class LpTransformer[C <: Context](val c: C) extends Internal210 {
+  class LpTransformer[C <: Context](val c: C) extends Internal210 with Combinators {
     import c.universe._
     def isInIota(id: Tree) = {
       id.symbol.owner.name.encoded == "iota" || id.symbol.owner.owner.name.encoded == "iota"

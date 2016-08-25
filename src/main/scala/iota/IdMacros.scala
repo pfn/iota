@@ -16,7 +16,7 @@ case class ViewIdType[+A : ClassTag]()
 private[iota] trait IdMacros {
   implicit def materializeIdType: ViewIdType[Any] = macro IdMacros.matIdType
 }
-private[iota] object IdMacros {
+private[iota] object IdMacros extends Combinators {
   def matIdType(c: Context): c.Expr[ViewIdType[Any]] = {
     import FileUtil._
     import c.universe._

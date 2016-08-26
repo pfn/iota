@@ -14,6 +14,7 @@ object Kleisli {
   }
 }
 object Combinators extends Combinators
+object AndroidExtensions extends AndroidExtensions
 object AutoK extends AutoK
 object Single extends Single
 object FutureCombinators extends FutureCombinators

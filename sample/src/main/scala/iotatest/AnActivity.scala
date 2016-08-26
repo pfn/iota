@@ -199,8 +199,7 @@ object AnotherTest extends Activity {
 
   }
   case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = AnotherTest.make[TextView](0), text2: TextView) extends ViewTree[RelativeLayout] {
-    import Listeners._
-    import Listeners.IotaExtensionMaterializers._
+    import iota.module.AndroidExtensions._
     materializeOnClickable[View]
 //    Listeners.AnyOnClickable(text1).onClick("foo")
 
@@ -267,8 +266,7 @@ package foo {
 }
 
 object Foo {
-  import Listeners._
-  import Listeners.IotaExtensionMaterializers._
+  import iota.module.AndroidExtensions._
 
 //  FooExt.Mat2.materialize[Option[String]]
 //  materializeOnClickable[View]
@@ -285,7 +283,8 @@ object Foo {
 //object FooExt {
 //  import language.experimental.macros
 //  object Mat2 {
-//    implicit def materialize[A]: Option[A] = macro ListenersMacro.materializeAny[Option,A]
+//    @AndroidTypeclass(List("apply"), "")
+//    implicit def materialize[A]: Option[A] = macro ExtensionDefs.materializeTypeclassInstance[Option,A]
 //  }
 //}
 

@@ -3,13 +3,16 @@ package iota
 /**
   * @author pfnguyen
   */
-object ListenersMacro {
+object ExtensionDefsMacro {
   import scala.reflect.macros.Context
 
-  def materializeAny[C[_],A : c.WeakTypeTag](c: Context)(implicit ctag: c.WeakTypeTag[C[A]]): c.Expr[C[A]] = {
+  // TODO handle registration calls that take more than just a listener class,
+  // e.g. AlertDialog's setButton(int, CharSequence, DialogInterface.OnClickListener)
+  // could be rewritten as onClick(int, CharSequence)(onClickFunction)
+  def materializeTypeclassInstance[C[_],A : c.WeakTypeTag](c: Context)(implicit ctag: c.WeakTypeTag[C[A]]): c.Expr[C[A]] = {
     import c.universe._
-    val config = c.macroApplication.symbol.annotations.find(_.tpe <:< typeOf[ExtensionConfig])
-    val (test, toImp) = config.fold(c.abort(c.enclosingPosition, s"ExtensionConfig was not defined on ${c.macroApplication}")) { cfg =>
+    val config = c.macroApplication.symbol.annotations.find(_.tpe <:< typeOf[AndroidTypeclass])
+    val (test, toImp) = config.fold(c.abort(c.enclosingPosition, s"AndroidTypeclass was not defined on ${c.macroApplication}")) { cfg =>
       cfg.scalaArgs.zipWithIndex.foldLeft((List.empty[String],"")) { case ((checks, imps), (a,i)) =>
         if (i == 0) {
           (a.collect {
@@ -26,9 +29,11 @@ object ListenersMacro {
     val targetTpe = ctag.tpe
     val setsym = test.map(t => viewType.member(newTermName(t))).find(_ != NoSymbol).map(_.asMethod)
     if (setsym.isEmpty) {
-      c.abort(c.enclosingPosition, "No matching registrant found")
+      c.abort(c.enclosingPosition, s"No registrant found on $viewType for '${test.mkString(" or ")}'")
     }
     val setter = setsym.get
+    if (setter.paramss.isEmpty || setter.paramss.head.isEmpty)
+      c.abort(c.enclosingPosition, s"'${setter.name}' does not take params")
     val listenerType = setter.paramss.head.head.typeSignature
 
     val anon = newTypeName(c.fresh("materialized"))
@@ -108,7 +113,7 @@ object ListenersMacro {
     ), Ident(anonterm)))
     x
   }
-  def newListenerMethod(c: Context)(sym: c.universe.MethodSymbol, handler: c.Tree, handleArgs: Boolean) = {
+  private[this] def newListenerMethod(c: Context)(sym: c.universe.MethodSymbol, handler: c.Tree, handleArgs: Boolean) = {
     import c.universe._
     val params = sym.paramss.head map { p =>
       ValDef(Modifiers(Flag.PARAM),

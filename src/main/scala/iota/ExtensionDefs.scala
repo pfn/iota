@@ -1,7 +1,6 @@
 package iota
 
 import android.view.View
-import android.view.View.OnClickListener
 
 import scala.annotation.implicitNotFound
 
@@ -9,18 +8,15 @@ import scala.annotation.implicitNotFound
   * @author pfnguyen
   */
 
-class ExtensionConfig(check: List[String], method: String) extends annotation.StaticAnnotation
-object Listeners {
-  trait IotaExtensionMaterializers extends Any {
-    @ExtensionConfig(List("addOnClickListener", "setOnClickListener"), "onClick")
-    implicit def materializeOnClickable[A]: OnClickable[A] = macro ListenersMacro.materializeAny[OnClickable,A]
-    @ExtensionConfig(List("addTextChangedListener"), "onTextChanged")
-    implicit def materializeOnTextChangeable[A]: OnTextChangeable[A] = macro ListenersMacro.materializeAny[OnTextChangeable,A]
-    @ExtensionConfig(List("setOnTouchListener"), "onTouch")
-    implicit def materializeOnTouchable[A]: OnTouchable[A] = macro ListenersMacro.materializeAny[OnTouchable,A]
-  }
+class AndroidTypeclass(register: List[String], callback: String) extends annotation.StaticAnnotation
 
-  object IotaExtensionMaterializers extends IotaExtensionMaterializers
+trait AndroidExtensions extends Any {
+  @AndroidTypeclass(List("addOnClickListener", "setOnClickListener"), "onClick")
+  implicit def materializeOnClickable[A]: OnClickable[A] = macro ExtensionDefs.materializeTypeclassInstance[OnClickable,A]
+  @AndroidTypeclass(List("addTextChangedListener"), "onTextChanged")
+  implicit def materializeOnTextChangeable[A]: OnTextChangeable[A] = macro ExtensionDefs.materializeTypeclassInstance[OnTextChangeable,A]
+  @AndroidTypeclass(List("setOnTouchListener"), "onTouch")
+  implicit def materializeOnTouchable[A]: OnTouchable[A] = macro ExtensionDefs.materializeTypeclassInstance[OnTouchable,A]
 
   @implicitNotFound("Could not find a way to add onClick to ${A}")
   trait OnClickable[A] extends Any {
@@ -52,4 +48,8 @@ object Listeners {
     def onTouchEx(handler: (View, android.view.MotionEvent) => Boolean): Unit = implicitly[OnTouchable[A]].onTouch(a, handler)
     def onTouch(handler:  => Boolean): Unit = implicitly[OnTouchable[A]].onTouchEx(a, handler)
   }
+}
+object ExtensionDefs {
+  def materializeTypeclassInstance[C[_],A : c.WeakTypeTag](c: reflect.macros.Context)(implicit ctag: c.WeakTypeTag[C[A]]): c.Expr[C[A]] =
+    ExtensionDefsMacro.materializeTypeclassInstance(c)(implicitly[c.WeakTypeTag[A]], ctag)
 }

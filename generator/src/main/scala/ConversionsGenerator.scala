@@ -64,23 +64,29 @@ class ConversionsGenerator {
 
       (prefix + x._1.callbackMethod.capitalize) -> x._2
     }
+    println(data.map(_._2.intf.cls.split('.').take(2).mkString(".")).distinct.mkString("\n"))
 
     val x = new File(srcManaged, "x.scala")
     val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(x), "utf-8"))
     fout.println("package iota")
     fout.println("import annotation.implicitNotFound")
     fout.println("trait GeneratedAndroidExtensions extends Any {")
-    val classes = data map { case (tc,tcd) =>
+    val corePrefixes =
+      "android.app." :: "android.view." :: "android.widget." :: "android.content." :: Nil
+    def startsWithCorePrefix(s: String) = corePrefixes.exists(s.startsWith)
+    val classes = data/*.partition(d => startsWithCorePrefix(d._2.intf.cls))._1*/ map { case (tc,tcd) =>
       val sb = new StringBuilder
       val methods = tcd.registerMethod.map(m => s""""$m"""").mkString(",")
       val tcname = "Can" + tc
 
+      sb.append("  // for " + tcd.intf.cls)
+      sb.append("\n")
       val name2 = tcd.intf.callbackMethod
       val traits = if (tcd.intf.args.isEmpty) {
         s"    def ${decapitalize(name2)}${conversionWildcards(tcd.intf)}(a: A, fn: ${byNameSignature(tcd.intf)})"
       } else {
-        s"""    @inline def $name2${conversionWildcards(tcd.intf)}(a: A, fn: ${byNameSignature(tcd.intf)})
-           |    @inline def ${name2}Ex${conversionWildcards(tcd.intf)}(a: A, fn: ${fnNSignature(tcd.intf)})""".stripMargin
+        s"""    def $name2${conversionWildcards(tcd.intf)}(a: A, fn: ${byNameSignature(tcd.intf)})
+           |    def ${name2}Ex${conversionWildcards(tcd.intf)}(a: A, fn: ${fnNSignature(tcd.intf)})""".stripMargin
       }
       val exts = if (tcd.intf.args.isEmpty) {
         s"    def $name2${conversionWildcards(tcd.intf)}(fn: ${byNameSignature(tcd.intf)}) = implicitly[$tcname[A]].$name2(a, fn)"

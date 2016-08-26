@@ -31,6 +31,7 @@ object ExtensionDefsMacro {
     if (setsym.isEmpty) {
       c.abort(c.enclosingPosition, s"No registrant found on $viewType for '${test.mkString(" or ")}'")
     }
+
     val setter = setsym.get
     if (setter.paramss.isEmpty || setter.paramss.head.isEmpty)
       c.abort(c.enclosingPosition, s"'${setter.name}' does not take params")
@@ -87,7 +88,9 @@ object ExtensionDefsMacro {
           !p.isByNameParam))
       val body = Apply(Select(Ident(target.name), setter.name.toTermName), listener :: Nil)
       DefDef(
-        Modifiers(),
+        Modifiers(NoFlags, tpnme.EMPTY, List(
+          Apply(Select(New(TypeTree(typeOf[scala.inline])), nme.CONSTRUCTOR), List())
+        )),
         ti.name,
         tds,
         tipss :: Nil,

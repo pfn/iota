@@ -200,7 +200,7 @@ object AnotherTest extends Activity {
   }
   case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = AnotherTest.make[TextView](0), text2: TextView) extends ViewTree[RelativeLayout] {
     import iota.module.AndroidExtensions._
-    materializeOnClickable[View]
+//    materializeOnClickable[View]
 //    Listeners.AnyOnClickable(text1).onClick("foo")
 
 //    Listeners.AnyOnClickable(1).onClick("foo")
@@ -275,7 +275,6 @@ object Foo {
   val text = new TextView(null)
   text.onClick { () }
   text.onClickEx { view => "" }
-  text.onTextChange { () }
   text.onTouchEx { (a, b) => true }
   text.onTouch { true }
 }

@@ -1,4 +1,26 @@
 val platform = "android-21"
+val doGeneration = taskKey[Seq[File]]("android-conversions-generator")
+
+lazy val generator = project.settings(exportJars := true, publish := (), PgpKeys.publishSigned := ())
+
+libraryDependencies in generator ++= "org.ow2.asm" % "asm-all" % "5.0.4" ::
+  Nil
+def runGenerator(generatorCp: Seq[Attributed[File]])
+                (srcManaged: File,
+                 classpath: Seq[Attributed[File]],
+                 androidJar: File): List[File] = {
+  import collection.JavaConverters._
+  type Generator = {
+    def apply(srcManaged: File,
+              classpath: java.util.List[File],
+              androidJar: File,
+              pkg: String): java.util.List[File]
+  }
+  val loader = sbt.classpath.ClasspathUtilities.toLoader(generatorCp.map(_.data))
+  val gen = loader.loadClass("ConversionsGenerator").newInstance().asInstanceOf[Generator]
+  gen.apply(srcManaged, classpath.map(_.data).asJava, androidJar, "iota").asScala.toList
+}
+
 
 lazy val macros = project.settings(
   platformTarget := platform,
@@ -12,7 +34,15 @@ lazy val macros = project.settings(
 lazy val root = project.in(file(".")).settings(
   mappings in (Compile,packageBin) <++= mappings in (macros,Compile,packageBin),
   scalacOptions in Compile += "-language:experimental.macros"
-).dependsOn(macros % "compile-internal").settings(buildWith(macros):_*)
+).dependsOn(macros % "compile-internal", generator % "compile-internal").settings(buildWith(macros):_*)
+
+doGeneration in root := {
+  val bcp = (bootClasspath in root).value
+  runGenerator((fullClasspath in (generator,Runtime)).value)(
+    (sourceManaged in (root,Compile)).value, bcp, bcp.head.data)
+}
+
+sourceGenerators in (root,Compile) <+= doGeneration in root
 
 lazy val sample = project.settings(androidBuildJar: _*).settings(
   platformTarget := platform,

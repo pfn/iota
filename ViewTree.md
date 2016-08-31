@@ -176,7 +176,7 @@ Creating a new layout is as simple as creating a new `case class` and
 extending `ViewTree[A]`. Any initialization code can be performed
 within the body of the class
 
-```
+```scala
 case class SimpleTextLayout(
   container: LinearLayout,
   text: TextView,
@@ -187,7 +187,7 @@ extends ViewTree[LinearLayout]
 
 Layouts nest automatically
 
-```
+```scala
 case class ContainerOfText(
   container: FrameLayout,
   progress: ProgressBar,
@@ -205,13 +205,13 @@ can be as simple or complex as one wants it to be.
 
 Inflating a view is as simple as:
 
-```
+```scala
 val containerOfText = ViewTree.inflate(anyContext, ContainerOfText)
 ```
 
 Custom attributes or themes need to be applied? Not a problem!
 
-```
+```scala
 val themedProgressContainerOfText = ViewTree.inflateF(anyContext, ContainerOfText) {
   case "progress" => anyContext.make[ProgressBar](android.R.attr.progressBarStyleSmall)
 }
@@ -233,7 +233,7 @@ omitted, defaults of `WRAP_CONTENT` will be used for both width and height.
 
 Layout functions can also be chained in a single expression to save time
 
-```
+```scala
 containerOfText.simpleText.text.matchWidth().marginLeft(8.dp).marginRight(8.dp)
 ```
 
@@ -246,7 +246,7 @@ should be the case!
 As seen previously, since everything is a `case class` any view can be
 immediately retrieved using standard object navigation.
 
-```
+```scala
 containerOfText.simpleText.text2 // 2nd TextView
 containerOfText.simpleText.container // LinearLayout
 containerOfText.container // FrameLayout
@@ -270,7 +270,7 @@ which they will be inserted.
 
 Lets try an incorrect pattern:
 
-```
+```scala
 val themedProgressContainerOfText = ViewTree.inflateF(anyContext, ContainerOfText) {
   // OOPS! typo of 'progress'
   case "progres" => new ProgressBar(anyContext, null, android.R.attr.progressBarStyleSmall)
@@ -287,7 +287,7 @@ result? no problem!
 
 `inflateF` caught it! How about incorrect return type?
 
-```
+```scala
 val themedProgressContainerOfText = ViewTree.inflateF(anyContext, ContainerOfText) {
   // Not a ProgressBar!
   case "progress" => new TextView(anyContext, null, android.R.attr.progressBarStyleSmall)
@@ -305,7 +305,7 @@ nope!
 
 What if we pass in a partial function symbol instead?
 
-```
+```scala
 val pf: PartialFunction[String,View] = {
   case "progress" => new View(anyContext) // !
 }
@@ -321,7 +321,7 @@ of the broken `pf` above, it can also be checked for safety by using
 `ViewTree.check` (also allows automatic type inference for the partial
 function as well)
 
-```
+```scala
 val pf = ViewTree.check(ContainerOfText) {
   case "progress" => new View(anyContext) // will now throw a compile time error!
 }

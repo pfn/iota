@@ -46,7 +46,7 @@ boilerplate is still required.
 Default extensions are easy to use, import `iota._` or `iota.module.DefaultExtensions._`
 and you're ready to go!
 
-```
+```scala
 import iota._
 class PerhapsAnActivity extends android.app.Activity {
   val button: Button = ???

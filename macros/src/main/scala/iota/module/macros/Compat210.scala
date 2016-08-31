@@ -15,7 +15,7 @@ object Compat210 {
   object decorators // Context.decorators object
   object contexts // scala.reflect.macros.contexts package
 }
-import iota.module.macros.Compat210._
+import Compat210._
 
 // unifies scala.reflect.macros.runtime.Context (Scala 2.10)
 // and scala.reflect.macros.contexts.Context (Scala 2.11)
@@ -24,15 +24,17 @@ private[iota] object Power {
   object DummyScope
   {
     import runtime._
+    import contexts._
     type Result = Context
   }
   type PowerContext = DummyScope.Result
 }
-import iota.module.macros.Power._
+import Power._
 
 // a cake slice that can be mixed into improvised macro bundles
 // to transparently bring new Scala 2.11 features to Scala 2.10
 private[iota] trait Internal210 { self =>
+  import scala.reflect.macros._
   import blackbox.Context
 
   val c: Context

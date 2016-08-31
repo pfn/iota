@@ -1,6 +1,6 @@
 package iota.module.macros
 
-import iota.module.macros.Compat210._
+import Compat210._
 
 /**
  * @author pfnguyen
@@ -11,6 +11,7 @@ import iota.module.macros.Compat210._
   */
 private[iota] case class OrigOwnerAttachment(sym: Any)
 object Splicer {
+  import scala.reflect.macros._
   import blackbox.Context
   def impl[A](c: Context)(expr: c.Expr[A]): c.Expr[A] = {
     val helper = new Splicer[c.type](c)

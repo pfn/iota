@@ -74,14 +74,16 @@ libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
 
 scalacOptions ++= "-deprecation" ::
+//  "-Ylog-classpath" ::
 //  "-Xprint:typer" ::
 //  "-Xprint-types" ::
 //  "-uniqid" ::
   Nil
 
-//scalacOptions in sample ++=
+scalacOptions in sample ++=
+//  "-Ylog-classpath" ::
 //    "-Xprint:typer" ::
 //    "-Xprint-types" ::
 //    "-uniqid" ::
-//  Nil
+  Nil
 

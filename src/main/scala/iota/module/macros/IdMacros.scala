@@ -3,8 +3,6 @@ package iota.module.macros
 import java.io.{FileOutputStream, OutputStreamWriter}
 
 import android.view.View
-import iota._
-import iota.module.Combinators
 
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
@@ -18,7 +16,7 @@ case class ViewIdType[+A : ClassTag]()
 private[iota] trait IdMacros {
   implicit def materializeIdType: ViewIdType[Any] = macro IdMacros.matIdType
 }
-private[iota] object IdMacros extends Combinators {
+private[iota] object IdMacros {
   def matIdType(c: Context): c.Expr[ViewIdType[Any]] = {
     import FileUtil._
     import c.universe._
@@ -107,7 +105,7 @@ private[iota] object IdMacros extends Combinators {
     idInfo.left.foreach { addMapping(strs, _) }
 
     reify {
-      kestrel ((v: A) => v.setId(id.splice))
+      iota.module.Combinators.kestrel ((v: A) => v.setId(id.splice))
     }
   }
 

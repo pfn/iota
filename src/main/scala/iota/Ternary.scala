@@ -3,12 +3,12 @@ package iota
 /**
   * @author pfnguyen
   */
-private[iota] trait TernaryOps extends Combinators {
+private[iota] trait TernaryOps {
   /** create a K-combinator based on a ternary expression.
     *  for example: `condK(istrue ? (yes => IO[yes]) | (no => IO[no]))`
     */
   def condK[A](ternary: Ternary[A]): Kestrel[A] = ternary match {
-    case TernaryCondition(b, ifTrue) => if (b)      ifTrue      else noopK[A]
+    case TernaryCondition(b, ifTrue) => if (b)      ifTrue      else module.Combinators.noopK[A]
     case TernaryElse(cond, ifFalse)  => if (cond.b) cond.ifTrue else ifFalse
   }
 }

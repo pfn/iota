@@ -17,10 +17,6 @@ private[iota] trait AllComponents
 package object iota extends AllComponents {
   type Kestrel[A] = A => IO[A]
 
-  implicit class WithTernaryOp(val b: Boolean) extends AnyVal {
-    def ?[A](ifTrue: Kestrel[A]): TernaryCondition[A] = TernaryCondition(b, ifTrue)
-  }
-
   private[iota] def sequence[A](c: Context)(xs: Seq[c.Expr[A]]): c.Expr[Seq[A]] = {
     import c.universe._
     c.Expr(Apply(Select(reify(Seq).tree, newTermName("apply")),
@@ -56,26 +52,6 @@ package object iota extends AllComponents {
       (ctx.getResources.getDisplayMetrics.scaledDensity * size).toInt
   }
 
-  implicit class IOKleisli[-A,+B](val f: A => IO[B]) extends AnyVal {
-    /** f andThen g */
-    def >=>[C](g: B => IO[C]): A => IO[C] = { a: A =>
-      f(a) >>= g
-    }
-  }
-
-  implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {
-    /** will fail to compile if id(xxx) is not used prior in the source */
-    @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
-    @inline final def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int): A = {
-      val v = vg.findViewById(id).asInstanceOf[A]
-      if (v == null) throw new NullPointerException(s"view $id not found")
-      v
-    }
-    /** will fail to compile if id(xxx) is not used prior in the source */
-    @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
-    @inline final def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int): Option[A] =
-      Option(vg.findViewById(id).asInstanceOf[A])
-  }
 }
 
 package iota {
@@ -87,5 +63,31 @@ package object effect
     with Views
     with TernaryOps
     with FutureCombinators
-    with LayoutCombinators
+    with LayoutCombinators {
+
+  implicit class WithTernaryOp(val b: Boolean) extends AnyVal {
+    def ?[A](ifTrue: Kestrel[A]): TernaryCondition[A] = TernaryCondition(b, ifTrue)
+  }
+  implicit class ViewFinder(val vg: android.view.ViewGroup) extends AnyVal {
+    /** will fail to compile if id(xxx) is not used prior in the source */
+    @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
+    @inline final def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int): A = {
+      val v = vg.findViewById(id).asInstanceOf[A]
+      if (v == null) throw new NullPointerException(s"view $id not found")
+      v
+    }
+    /** will fail to compile if id(xxx) is not used prior in the source */
+    @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
+    @inline final def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int): Option[A] =
+    Option(vg.findViewById(id).asInstanceOf[A])
+  }
+  implicit class IOKleisli[-A,+B](val f: A => IO[B]) extends AnyVal {
+    /** f andThen g */
+    def >=>[C](g: B => IO[C]): A => IO[C] = { a: A =>
+      f(a) >>= g
+    }
+  }
+
+
+}
 }

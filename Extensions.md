@@ -102,8 +102,7 @@ class PerhapsAnotherActivity extends android.app.Activity {
 }
 
 object CustomExtensions extends TextExt with AnimExt
-// LIMITATION, typeclass traits must be defined in a top-level construct and
-// cannot be path-dependent
+// LIMITATION, typeclass traits cannot be path-dependent!
 object ExtTypeclasses {
   trait CanTextViewOnChange[A] {
     def onTextChanged[B](a: A)(handler: => B)

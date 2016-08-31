@@ -1,4 +1,6 @@
-package iota
+package iota.module
+
+import iota.{HookMacro, SingleMacro}
 
 /**
   * @author pfnguyen

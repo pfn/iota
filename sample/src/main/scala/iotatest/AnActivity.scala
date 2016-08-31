@@ -22,8 +22,8 @@ import scala.concurrent.Future
 
 import iota._
 import iota.effect._
-//import iota.IO
-//import iota.WithContext
+import iota.module
+import iota.ViewTree
 
 /**
  * @author pfnguyen
@@ -60,6 +60,7 @@ class AnActivity extends Activity {
   val tv: TextView = firstlayout.perform().findView(Id.firsttext)
   val tv1: TextView = findView(Id.firsttext)
 
+  class AnyCanViewOnClick
   IO(new FrameLayout(this))(IO(new View(this)))
   IO(new View(this)) >>= id(1) >>= hook0.onClick(IO {
     println("x")
@@ -199,7 +200,7 @@ object AnotherTest extends Activity {
 
   }
   case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = AnotherTest.make[TextView](0), text2: TextView) extends ViewTree[RelativeLayout] {
-    import iota.module.AndroidExtensions._
+    import iota._
 //    materializeOnClickable[View]
 //    Listeners.AnyOnClickable(text1).onClick("foo")
 
@@ -266,8 +267,7 @@ package foo {
 }
 
 object Foo {
-  import iota.module.AndroidExtensions._
-
+  import iota._
 //  FooExt.Mat2.materialize[Option[String]]
 //  materializeOnClickable[View]
 //  materializeOnTouchable[View]

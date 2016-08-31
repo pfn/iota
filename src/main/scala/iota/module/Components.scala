@@ -14,7 +14,7 @@ object Kleisli {
   }
 }
 object Combinators extends Combinators
-object AndroidExtensions extends extension.GeneratedAndroidViewExtensions
+object DefaultExtensions extends DefaultExtensions
 object AutoK extends AutoK
 object Single extends Single
 object FutureCombinators extends FutureCombinators

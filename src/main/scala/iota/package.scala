@@ -12,6 +12,7 @@ private[iota] trait AllComponents
   with Contexts
   with Themes
   with Configurations
+  with DefaultExtensions
 }
 package object iota extends AllComponents {
   type Kestrel[A] = A => IO[A]

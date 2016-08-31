@@ -75,13 +75,15 @@ class ConversionsGenerator {
   }
 
   def writeTypeclassExtensions(target: File, pkg: String, data: List[(String,String,TypeclassDefinition)]): File = {
-    val genName = "Generated" + pkg.split('.').map(_.capitalize).mkString + "Extensions"
+    val genName = pkg.split('.').map(_.capitalize).mkString
     val genTraits = "GeneratedCan" + pkg.split('.').map(_.capitalize).mkString
-    val f = new File(target, genName + ".scala")
+    val parent = new File(new File(new File(target, "iota"), "module"), "extension")
+    parent.mkdirs()
+    val f = new File(parent, genName + ".scala")
     val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), "utf-8"))
     fout.println("package iota.module.extension")
-    fout.println("import iota.AndroidTypeclass")
-    fout.println("import iota.ExtensionDefs")
+    fout.println("import iota.module.AndroidTypeclass")
+    fout.println("import iota.module.ExtensionDefs")
     fout.println(s"import iota.module.typeclass.$genTraits._")
     fout.println(s"trait $genName {")
     val classes = data.map { case (grp, tc, tcd) =>
@@ -114,7 +116,9 @@ class ConversionsGenerator {
   }
   def writeTypeclassTraits(target: File, pkg: String, data: List[(String,String,TypeclassDefinition)]): File = {
     val genName = "GeneratedCan" + pkg.split('.').map(_.capitalize).mkString
-    val f = new File(target, genName + ".scala")
+    val parent = new File(new File(new File(target, "iota"), "module"), "typeclass")
+    parent.mkdirs()
+    val f = new File(parent, genName + ".scala")
     val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), "utf-8"))
     fout.println("package iota.module.typeclass")
     fout.println("import annotation.implicitNotFound")

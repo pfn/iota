@@ -44,7 +44,7 @@ Pre-defined extensions are in the `iota.module.extension` package and are
 named after the first two parts of the package name, capitalized and
 without the `.` separator
 
-```
+```scala
 import iota._
 object MyExtensions extends iota.module.extension.AndroidContent
   with iota.module.extension.AndroidWidget
@@ -79,7 +79,7 @@ we can't use these exact rules, and will want to define our own
 extensions, such as adding an `AnimatorListener` to an `Animator` or
 a `TextWatcher` to a `TextView`
 
-```
+```scala
 import iota.module.AndroidTypeclass
 import iota.module.ExtensionDefs
 import CustomExtensions._

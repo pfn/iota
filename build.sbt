@@ -52,8 +52,6 @@ lazy val sample = project.settings(androidBuildJar: _*).settings(
 
 androidBuildJar
 
-inConfig(Compile)(Defaults.packageTaskSettings(packageSrc, Defaults.packageSrcMappings))
-
 classDirectory in Compile := crossTarget.value / "classes"
 
 name := "iota"

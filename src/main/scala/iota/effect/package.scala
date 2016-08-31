@@ -16,7 +16,8 @@ package object effect
     with Views
     with TernaryOps
     with FutureCombinators
-    with LayoutCombinators {
+    with LayoutCombinators
+    with MainComponents {
   type IO[A] = module.IO[A]
   type Kestrel[A] = module.Kestrel[A]
   val IO = module.IO
@@ -44,6 +45,13 @@ package object effect
       f(a) >>= g
     }
   }
-
-
+  implicit class Metrics(val size: Int) extends AnyVal {
+    import android.content.{Context => AndroidContext}
+    /** convert dp to pixel values */
+    @inline final def dp(implicit ctx: AndroidContext): Int =
+    (ctx.getResources.getDisplayMetrics.density * size).toInt
+    /** convert sp to pixel values */
+    @inline final def sp(implicit ctx: AndroidContext): Int =
+    (ctx.getResources.getDisplayMetrics.scaledDensity * size).toInt
+  }
 }

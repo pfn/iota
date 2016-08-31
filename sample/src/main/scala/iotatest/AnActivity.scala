@@ -11,18 +11,7 @@ import android.widget._
 
 import scala.concurrent.Future
 
-//import iota.std._
-//import Configurations._
-//import ViewCombinators._
-//import LayoutCombinators._
-//import Combinators._
-//import Ternary._
-//import Contexts._
-
 import iota.effect._
-import iota.module.Contexts._
-import iota.module.Single._
-import iota.module.Configurations._
 
 /**
  * @author pfnguyen

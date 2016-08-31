@@ -1,15 +1,10 @@
 package iotatest
 
-import java.io.{File, FilenameFilter}
-
 import android.animation.Animator.AnimatorListener
 import android.app.Activity
 import android.net.ConnectivityManager
-import android.os.Bundle
-import android.view.{Gravity, View, ViewGroup}
+import android.view.{View, ViewGroup}
 import android.widget._
-
-import scala.concurrent.Future
 
 //import iota.std._
 //import Configurations._
@@ -20,9 +15,6 @@ import scala.concurrent.Future
 //import Contexts._
 
 import iota.effect._
-import iota.module.Contexts._
-import iota.module.Single._
-import iota.module.Configurations._
 
 /**
  * @author pfnguyen

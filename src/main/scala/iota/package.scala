@@ -6,16 +6,15 @@ import iota.module.macros.ContextMacro
  */
 package iota {
 
-  import iota.module.{Configurations, Contexts, DefaultExtensions, Single, Themes}
+  import iota.module.{Configurations, Contexts, Single, Themes}
 
-  private[iota] trait AllComponents
+  private[iota] trait MainComponents
     extends Single
       with Contexts
       with Themes
       with Configurations
-      with DefaultExtensions
 }
-package object iota extends AllComponents {
+package object iota extends MainComponents with iota.module.DefaultExtensions{
   type ViewTree[A <: ViewGroup] = module.ViewTree[A]
   val ViewTree = module.ViewTree
 

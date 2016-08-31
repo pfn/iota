@@ -12,8 +12,6 @@ import scala.reflect.ClassTag
  * @author pfnguyen
  */
 object Contexts extends Contexts {
-  type HasContext = macros.HasContext
-  type HasActivity = macros.HasActivity
   implicit class ViewMaker(val ctx: AndroidContext) extends AnyVal {
     /** create a view `A` without specifying the `Context` and `AttributeSet` parameters
       * e.g `ctx.make[TextView]` or `ctx.make[ProgressBar](android.R.attr.progressBarStyleSmall)`
@@ -23,6 +21,8 @@ object Contexts extends Contexts {
   }
 }
 private[iota] trait Contexts {
+  type HasContext = macros.HasContext
+  type HasActivity = macros.HasActivity
   /** pull a context out of "thin air", checks for Activity, Fragment and WithContext */
   implicit def materializeContext: AndroidContext = macro ContextMacro.materializeContextImpl
 

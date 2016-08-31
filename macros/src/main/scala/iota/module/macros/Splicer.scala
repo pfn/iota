@@ -18,7 +18,7 @@ object Splicer {
   }
   private class Splicer[C <: Context](val c: C) extends Internal210 {
     def changeOwner(tree: c.Tree): c.Tree = {
-      import c.universe._
+      import c.universe._, internal._, decorators._
       val origOwner = tree.attachments.get[OrigOwnerAttachment].map(_.sym).get.asInstanceOf[Symbol]
       c.internal.changeOwner(tree, origOwner, c.internal.enclosingOwner)
     }

@@ -98,6 +98,7 @@ private[iota] trait Internal210 { self =>
   // therefore we need to settle on some sort of a middle ground
   implicit class RichSymbol(val sym: self.c.universe.Symbol) {
     def setInfoCompat(info: Type): Symbol = {
+      import compat._
       sym.setTypeSignature(info)
     }
   }

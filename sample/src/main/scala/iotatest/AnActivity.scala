@@ -60,16 +60,16 @@ class AnActivity extends Activity {
   val tv1: TextView = findView(Id.firsttext)
 
   IO(new FrameLayout(this))(IO(new View(this)))
-  IO(new View(this)) >>= id(1) >>= hook0.onClick(IO {
-    println("x")
-    "Hi"
-  }) >>= hookM0.onClick.onClick(IO { false }) >>= hook.onClick { (v: View) =>
-    IO(true)
-  } >>= hookM.onClick.onClick((v: View) => IO { v.setOnClickListener(null);  true })
-
-  w[ListView] >>= hookM.scroll.onScrollStateChanged((view: AbsListView, state: Int) => IO {
-    println("state")
-  })
+//  IO(new View(this)) >>= id(1) >>= hook0.onClick(IO {
+//    println("x")
+//    "Hi"
+//  }) >>= hookM0.onClick.onClick(IO { false }) >>= hook.onClick { (v: View) =>
+//    IO(true)
+//  } >>= hookM.onClick.onClick((v: View) => IO { v.setOnClickListener(null);  true })
+//
+//  w[ListView] >>= hookM.scroll.onScrollStateChanged((view: AbsListView, state: Int) => IO {
+//    println("state")
+//  })
 
   c[FrameLayout](
     w[TextView] >>= lp(MATCH_PARENT, MATCH_PARENT)

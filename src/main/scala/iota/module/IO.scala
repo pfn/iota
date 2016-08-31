@@ -1,10 +1,11 @@
-package iota
+package iota.module
 
-import android.os.{Handler, Looper}
-import android.util.Log
+import android.os.Looper
 import android.view.{View, ViewGroup}
+import iota.module
+import iota.module.macros.IOViewGroupMacro
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.Future
 
 /** side-effect tracker. call `perform` to execute the side-effects within */
 final class IO[+A] private(val perform: () => A) {

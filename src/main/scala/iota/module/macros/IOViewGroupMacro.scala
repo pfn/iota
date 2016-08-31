@@ -1,6 +1,7 @@
-package iota
+package iota.module.macros
 
 import android.view.{View, ViewGroup}
+import iota.module.IO
 
 import scala.reflect.macros.Context
 

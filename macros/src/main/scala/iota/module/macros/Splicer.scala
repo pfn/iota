@@ -1,5 +1,6 @@
-package iota
-import Compat210._
+package iota.module.macros
+
+import iota.module.macros.Compat210._
 
 /**
  * @author pfnguyen
@@ -10,7 +11,6 @@ import Compat210._
   */
 private[iota] case class OrigOwnerAttachment(sym: Any)
 object Splicer {
-  import scala.reflect.macros._
   import blackbox.Context
   def impl[A](c: Context)(expr: c.Expr[A]): c.Expr[A] = {
     val helper = new Splicer[c.type](c)
@@ -18,7 +18,7 @@ object Splicer {
   }
   private class Splicer[C <: Context](val c: C) extends Internal210 {
     def changeOwner(tree: c.Tree): c.Tree = {
-      import c.universe._, internal._, decorators._
+      import c.universe._
       val origOwner = tree.attachments.get[OrigOwnerAttachment].map(_.sym).get.asInstanceOf[Symbol]
       c.internal.changeOwner(tree, origOwner, c.internal.enclosingOwner)
     }

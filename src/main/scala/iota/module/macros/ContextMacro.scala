@@ -1,56 +1,13 @@
-package iota
-
-import android.app.Activity
-import android.content.{Context => AndroidContext}
-import android.net.nsd.NsdManager
-import android.telephony.TelephonyManager
-import scala.annotation.implicitNotFound
-import scala.reflect.ClassTag
+package iota.module.macros
 import scala.reflect.macros.{Context => MacroContext}
+import android.content.{Context => AndroidContext}
+import android.app.Activity
+
+import scala.annotation.implicitNotFound
 
 /**
- * @author pfnguyen
- */
-@implicitNotFound("Unable to find a service constant for ${T},\n" +
-  "add the following implicit value to your code if this is not a mistake:\n    " +
-  "'implicit val `systemService for ${T}` =\n      " +
-  "SystemService[${T}](GET_SERVICE_CONSTANT)`'")
-case class SystemService[T](name: String) extends AnyVal
-private[iota] trait Contexts {
-  /** pull a context out of "thin air", checks for Activity, Fragment and WithContext */
-  implicit def materializeContext: AndroidContext = macro ContextMacro.materializeContextImpl
-
-  implicit def materializeActivity: Activity = macro ContextMacro.materializeActivityImpl
-
-  /** find a strongly-typed view.
-    * will fail to compile if id(xxx) is not used prior in the source
-    */
-  @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
-  def findView[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): A = {
-    val v = activity.findViewById(id).asInstanceOf[A]
-    if (v == null) throw new NullPointerException(s"view $id not found")
-    v
-  }
-
-  /** find a strongly-typed view.
-    * will fail to compile if id(xxx) is not used prior in the source
-    */
-  @deprecated("Use the view holder pattern for better compile-time safety", "0.9.2")
-  def findViewOption[A <: android.view.View : ViewIdType : ClassTag](id: Int)(implicit activity: Activity): Option[A] =
-    Option(activity.findViewById(id).asInstanceOf[A])
-
-  implicit val `nsd system service` =
-    SystemService[NsdManager](AndroidContext.NSD_SERVICE)
-  implicit val `telephony system service` =
-    SystemService[TelephonyManager](AndroidContext.TELEPHONY_SERVICE)
-
-  implicit def materializeSystemService[T]: SystemService[T] = macro ContextMacro.materializeSystemServiceImpl[T]
-  /** type-safe retrieval of system service objects.
-    * e.g. `systemService[NotificationManager]`
-    */
-  @inline final def systemService[T](implicit s: SystemService[T], context: AndroidContext): T =
-    context.getSystemService(s.name).asInstanceOf[T]
-}
+  * @author pfnguyen
+  */
 private[iota] object ContextMacro {
   private[this] val TYPES =
     "android.app.Context" ::
@@ -142,7 +99,6 @@ private[iota] object ContextMacro {
   }
   def materializeSystemServiceImpl[T: c.WeakTypeTag](c: MacroContext): c.Expr[SystemService[T]] = {
     import c.universe._
-
     val tpe = weakTypeOf[T]
     val candidates = SERVICE_CONSTANTS filter (tpe.toString.toLowerCase contains _._1)
     val service = ("" /: candidates) { (a, b) =>
@@ -152,7 +108,7 @@ private[iota] object ContextMacro {
     if (service.isEmpty)
       c.abort(c.enclosingPosition, s"No service constant found for $tpe")
     c.Expr[SystemService[T]](Apply(TypeApply(
-      Select(reify(iota.SystemService).tree, newTermName("apply")),
+      Select(reify(iota.module.macros.SystemService).tree, newTermName("apply")),
       List(TypeTree(tpe))
     ), List(Literal(Constant(service)))))
   }
@@ -185,3 +141,8 @@ trait HasContext {
 trait HasActivity {
   def activity: Activity
 }
+@implicitNotFound("Unable to find a service constant for ${T},\n" +
+  "add the following implicit value to your code if this is not a mistake:\n    " +
+  "'implicit val `systemService for ${T}` =\n      " +
+  "SystemService[${T}](GET_SERVICE_CONSTANT)`'")
+case class SystemService[T](name: String) extends AnyVal

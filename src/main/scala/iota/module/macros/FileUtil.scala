@@ -1,4 +1,4 @@
-package iota
+package iota.module.macros
 
 import java.io.File
 

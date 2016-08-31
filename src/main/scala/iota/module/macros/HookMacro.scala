@@ -1,4 +1,6 @@
-package iota
+package iota.module.macros
+
+import iota.module.IO
 
 import scala.reflect.macros.Context
 

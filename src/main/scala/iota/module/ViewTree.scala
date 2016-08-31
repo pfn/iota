@@ -1,8 +1,9 @@
-package iota
+package iota.module
 
-import android.view.{View, ViewGroup}
 import android.annotation.TargetApi
+import android.view.{View, ViewGroup}
 import android.widget._
+import iota.module.macros.ViewTreeMacro
 
 /**
   * @author pfnguyen

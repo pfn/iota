@@ -1,35 +1,15 @@
-package iota
+package iota.module.macros
 
 import android.content.{Context => AndroidContext}
-import android.view.{ViewGroup, View}
-import iota.IOViewGroupMacro.LpTransformer
+import android.view.{View, ViewGroup}
+import iota.module.IO
+import iota.module.macros.IOViewGroupMacro.LpTransformer
 
 import scala.reflect.macros.Context
 
 /**
   * @author pfnguyen
   */
-private[iota] trait Views {
-
-  /** create any android `ViewGroup` that takes `Context` as a single constructor parameter.
-    * additionally, provides type hints for the use of `lp` and `lpK` for constructing
-    * `LayoutParams`
-    */
-  def l[A <: ViewGroup](vs: IO[_ <: View]*)(implicit ctx: AndroidContext): IO[A] = macro ViewMacros.l[A]
-  /** create any android object that takes `Context` as a single constructor parameter */
-  def w[A](implicit ctx: AndroidContext): IO[A] = macro ViewMacros.w[A]
-
-  /** type inference currying helper for `c` */
-  class cHelper[A <: ViewGroup] {
-    def apply[B](body: B): B = macro ViewMacros.cw[A,B]
-  }
-  private[this] val chelper = new cHelper[ViewGroup]
-  /** a type-hint is required when using `lp` or `lpK` outside of `IO[ViewGroup].apply(IO[View]*)`,
-    * use `c[ViewGroup](B) => B` to provide `B` with the the type hint required to use `lp` and `lpK`
-    */
-  def c[A <: ViewGroup] = chelper.asInstanceOf[cHelper[A]] // prevent additional allocations
-}
-
 private[iota] object ViewMacros {
   def w[A : c.WeakTypeTag](c: Context)(ctx: c.Expr[AndroidContext]): c.Expr[IO[A]] = {
     import c.universe._

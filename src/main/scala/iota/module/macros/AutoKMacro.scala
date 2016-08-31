@@ -1,4 +1,4 @@
-package iota
+package iota.module.macros
 
 import iota.module.Combinators
 
@@ -7,29 +7,6 @@ import scala.reflect.macros.Context
 /**
   * @author pfnguyen
   */
-private[iota] trait AutoK {
-  import language.dynamics
-
-  /**
-    * K-combinator generator, use with any IO container to generate
-    * a kestrel automatically, e.g. `w[TextView] >>= k.hint("Hint")` turns into:
-    * `w[TextView] >>= kestrel(_.setHint("Hint"))`
-    *
-    * Another example: `IO(new StringBuilder) >>= k.append("Foo")` turns into:
-    * `IO(new StringBuilder) >>= kestrel(_.append("Foo"))`
-    *
-    * Rules for resolution of the containing object's method are:
-    *  `setOnNAMEListener`,
-    *  `addOnNAMEListener`,
-    *  `setNAMEListener`,
-    *  `addNAMEListener`,
-    *  `setNAME`,
-    *  `NAME`
-    */
-  object k extends Dynamic {
-    def applyDynamic[V,A](method: String)(args: A*): Kestrel[V] = macro AutoKMacro.applyK[V,A]
-  }
-}
 private[iota] object AutoKMacro {
   def applyK[V: c.WeakTypeTag, A](c: Context)(method: c.Expr[String])(args: c.Expr[Any]*): c.Expr[Kestrel[V]] = {
     val helper = new AutoKMacro[c.type](c)

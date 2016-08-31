@@ -1,4 +1,4 @@
-package iota
+package iota.module
 
 import android.animation.Animator
 import android.animation.Animator.AnimatorListener
@@ -6,16 +6,19 @@ import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.text.Html
 import android.text.method.TransformationMethod
-import android.view.{ViewPropertyAnimator, ViewGroup, View}
+import android.view.{View, ViewGroup, ViewPropertyAnimator}
 import android.widget.{ImageView, TextView}
+import iota._
+import iota.module.macros.{HookMacro, IdMacros}
 
-import scala.concurrent.{ExecutionContext, Promise, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.reflect.internal.annotations.compileTimeOnly
 
 /**
   * @author pfnguyen
   */
 
+object Combinators extends Combinators
 private[iota] trait Combinators {
   /** K-combinator, perform side-effects on A and automatically return A */
   def kestrel[A, B](f: A => B): Kestrel[A] = a => IO {
@@ -25,12 +28,13 @@ private[iota] trait Combinators {
   private[iota] def noopK[A]: Kestrel[A] = kestrel(_ => ())
 }
 
+object FutureCombinators extends FutureCombinators
 private[iota] trait FutureCombinators {
   /** K-combinators cannot be applied directly to `IO[Future[A]]` using `>>=`,
     * wrapping them in `defer()` makes this possible.
     */
   def defer[A](f: Kestrel[A])(implicit ec: ExecutionContext): Future[A] => IO[Future[A]] = future => IO {
-    future.map(a => f(a).perform())
+    future.map(a => f(a).perform())(ec)
   }
 
   /** Any subsequent asynchronous operations that need to run (`>>=`) after an
@@ -38,10 +42,11 @@ private[iota] trait FutureCombinators {
     * `IO[Future[A]]` type.
     */
   def deferF[A](f: A => IO[Future[A]])(implicit ec: ExecutionContext): Future[A] => IO[Future[A]] = future => IO {
-    future.flatMap(a => f(a).perform())
+    future.flatMap(a => f(a).perform())(ec)
   }
 }
 
+object ViewCombinators extends ViewCombinators
 private[iota] trait ViewCombinators extends Combinators {
   def id[A <: View](id: Int): Kestrel[A] = macro IdMacros.tIdImpl[A]
 
@@ -118,6 +123,7 @@ private[iota] trait ViewCombinators extends Combinators {
   }
 }
 
+object ViewCombinatorExtras extends ViewCombinatorExtras
 private[iota] trait ViewCombinatorExtras extends Combinators {
   def visibility[A <: View](visibility: Int): Kestrel[A] =
     kestrel(_.setVisibility(visibility))
@@ -141,6 +147,7 @@ private[iota] trait ViewCombinatorExtras extends Combinators {
   def backgroundColor[A <: View](color: String): Kestrel[A] = kestrel(_.setBackgroundColor(Color.parseColor(color)))
 }
 
+object LayoutCombinators extends LayoutCombinators
 private[iota] trait LayoutCombinators {
 
   @inline
@@ -181,6 +188,7 @@ private[iota] trait LayoutCombinators {
   final def lpK[V <: View,A,B](args: Any*)(k: A => B): Kestrel[V] = ???
 }
 
+object TextCombinators extends TextCombinators
 private[iota] trait TextCombinators extends Combinators {
   def text[A <: TextView](text: CharSequence): Kestrel[A] = kestrel(_.setText(text))
   def text[A <: TextView](text: Int):          Kestrel[A] = kestrel(_.setText(text))
@@ -200,6 +208,7 @@ private[iota] trait TextCombinators extends Combinators {
   def textAppearance[A <: TextView](resid: Int): Kestrel[A] = kestrel(tv => tv.setTextAppearance(tv.getContext, resid))
 }
 
+object ImageCombinators extends ImageCombinators
 private[iota] trait ImageCombinators extends Combinators {
   def imageResource[A <: ImageView](resid: Int): Kestrel[A] = kestrel(_.setImageResource(resid))
   def imageScale[A <: ImageView](scaleType: ImageView.ScaleType): Kestrel[A] = kestrel(_.setScaleType(scaleType))

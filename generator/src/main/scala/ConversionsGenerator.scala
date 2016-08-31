@@ -340,21 +340,6 @@ class ConversionsGenerator {
     }
   }
 
-//  def writeExtensions(usages: List[Usage], pkg: String, output: File, deppkgs: List[String]): Unit = {
-//    val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "utf-8"))
-//    fout.println(s"package $pkg")
-//    deppkgs.foreach { d =>
-//      fout.println(s"import $d.conversions._")
-//    }
-//    fout.println("import conversions._")
-//    fout.println("package object extensions {")
-//    usages foreach { usage =>
-//      fout.println(usageToExtension(usage))
-//    }
-//    fout.println("}")
-//    fout.close()
-//  }
-
   case class SigReader(signature: String) extends SignatureVisitor(Opcodes.ASM5) {
     var params = List.empty[ParamType]
     var ret = ParamType.blank

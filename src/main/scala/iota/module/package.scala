@@ -10,6 +10,8 @@ import scala.concurrent.ExecutionContext
   */
 package object module {
 
+  type Kestrel[A] = A => IO[A]
+
   /** UI execution context, use with combinators such as `defer` and `deferF`
     */
   // https://bitbucket.org/snippets/atlassianlabs/pLMry#file-no-implicit-objects.md
@@ -18,4 +20,6 @@ package object module {
     override def execute(runnable: Runnable) = handler.post(runnable)
     override def reportFailure(t: Throwable) = Log.e("IOTA", t.getMessage, t)
   }
+
+  type AndroidTypeclass = macros.AndroidTypeclass
 }

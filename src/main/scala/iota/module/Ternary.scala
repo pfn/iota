@@ -1,8 +1,17 @@
-package iota
+package iota.module
+
+import iota.{module, _}
 
 /**
   * @author pfnguyen
   */
+object Ternary extends TernaryOps {
+  implicit class WithTernaryOp(val b: Boolean) extends AnyVal {
+    /** ternary expression creator */
+    def ?[A](ifTrue: Kestrel[A]): TernaryCondition[A] = TernaryCondition(b, ifTrue)
+  }
+}
+
 private[iota] trait TernaryOps {
   /** create a K-combinator based on a ternary expression.
     *  for example: `condK(istrue ? (yes => IO[yes]) | (no => IO[no]))`

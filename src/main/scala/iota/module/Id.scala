@@ -1,8 +1,8 @@
-package iota
+package iota.module
 
-import java.io.{OutputStreamWriter, FileOutputStream}
+import java.io.{FileOutputStream, OutputStreamWriter}
 
-import language.dynamics
+import scala.language.dynamics
 import scala.reflect.macros.Context
 
 /**
@@ -25,7 +25,7 @@ object Id extends Dynamic {
   private[this] val EXISTING_ID_FILE = "iota-ids-lst.txt"
   def loadLiteralId(c: Context)(name: c.Expr[String]): c.Expr[Int] = lock.synchronized {
     import c.universe._
-    import FileUtil._
+    import iota.module.macros.FileUtil._
 
     val Expr(Literal(Constant(s: String))) = name
 

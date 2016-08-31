@@ -1,10 +1,10 @@
-package iota.module
-
-import iota.{HookMacro, SingleMacro}
+package iota.module.macros
 
 /**
   * @author pfnguyen
   */
+class AndroidTypeclass(register: List[String], callback: String) extends annotation.StaticAnnotation
+
 private[iota] object ExtensionDefsMacro {
   import scala.reflect.macros.Context
 

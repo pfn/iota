@@ -1,12 +1,13 @@
-package iota
+package iota.module
 
 import android.content.Context
 import android.view.View
+import iota.module.macros.ViewTreeMacro
 
 /**
   * @author pfnguyen
   */
-object ViewTreeBoilerplate {
+private[iota] object ViewTreeBoilerplate {
   trait Inflate {
     def inflate[A <: ViewTree[_]](ctx: Context, inflater: (_) => A): A = macro ViewTreeMacro.inflateAny[A]
     def inflate[A <: ViewTree[_]](ctx: Context, inflater: (_, _) => A): A = macro ViewTreeMacro.inflateAny[A]

@@ -8,7 +8,6 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.view.{Gravity, View, ViewGroup}
 import android.widget._
-import iota.module.Contexts
 
 import scala.concurrent.Future
 
@@ -21,13 +20,7 @@ import scala.concurrent.Future
 //import Contexts._
 
 import iota.effect._
-import iota.module
 import iota.module.Contexts._
-import iota.IO
-import iota.Id
-import iota.HasContext
-import iota.ViewTree
-import iota.Kestrel
 import iota.module.Single._
 import iota.module.Configurations._
 
@@ -41,7 +34,7 @@ class AnActivity extends Activity {
 
   val fl = new FrameLayout(this)
   val weirdMatchP = 2
-  val firstlayout = (IO(new FrameLayout(this)) >>= module.ViewCombinatorExtras.gone)(
+  val firstlayout = (IO(new FrameLayout(this)) >>= iota.module.ViewCombinatorExtras.gone)(
     IO(new TextView(this)) >>= lp(MATCH_PARENT, weirdMatchP) >>= kestrel { t => t.setText("HI") } >>= id(Id.firsttext),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)((p: ViewGroup.MarginLayoutParams) => 9) >>= k.text("Yo"),
     IO(new TextView(this)) >>= lpK(MATCH_PARENT, weirdMatchP)(margins(all = 5.dp)),
@@ -66,7 +59,6 @@ class AnActivity extends Activity {
   val tv: TextView = firstlayout.perform().findView(Id.firsttext)
   val tv1: TextView = findView(Id.firsttext)
 
-  class AnyCanViewOnClick
   IO(new FrameLayout(this))(IO(new View(this)))
   IO(new View(this)) >>= id(1) >>= hook0.onClick(IO {
     println("x")
@@ -186,8 +178,9 @@ object Main extends App {
   new File("/").listF(s => { println("Found: " + s); true })
 }
 
-case class Bugger(container: LinearLayout, text: TextView, b2: foo.Bugger2) extends ViewTree[LinearLayout]
+case class Bugger(container: LinearLayout, text: TextView, b2: foo.Bugger2) extends iota.ViewTree[LinearLayout]
 object AnotherTest extends Activity {
+  import iota._
 
   import ViewGroup.LayoutParams._
 
@@ -206,7 +199,6 @@ object AnotherTest extends Activity {
 
   }
   case class SimpleRelative(ctx: android.content.Context, container: RelativeLayout, text1: TextView = AnotherTest.make[TextView](0), text2: TextView) extends ViewTree[RelativeLayout] {
-    import iota._
 //    materializeOnClickable[View]
 //    Listeners.AnyOnClickable(text1).onClick("foo")
 
@@ -217,7 +209,7 @@ object AnotherTest extends Activity {
     text1.endOf(text2).alignParentEnd()
     text1.alignParentBottom()
     text1.alignWithParentIfMissing()
-    Contexts.ViewMaker(ctx).make[Space]
+    module.Contexts.ViewMaker(ctx).make[Space]
     ctx.make[Space]
     create[Space]
     create[ProgressBar](android.R.attr.progressBarStyleSmall)
@@ -269,11 +261,11 @@ object AnotherTest extends Activity {
 }
 
 package foo {
-  case class Bugger2(container: LinearLayout, text: TextView, str: Option[String]) extends ViewTree[LinearLayout]
+  case class Bugger2(container: LinearLayout, text: TextView, str: Option[String]) extends iota.ViewTree[LinearLayout]
 }
 
 object Foo {
-  import iota._
+  import iota.module.DefaultExtensions._
 //  FooExt.Mat2.materialize[Option[String]]
 //  materializeOnClickable[View]
 //  materializeOnTouchable[View]

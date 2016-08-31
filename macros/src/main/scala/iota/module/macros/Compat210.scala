@@ -1,4 +1,4 @@
-package iota
+package iota.module.macros
 
 /**
  * from scalamacros/macrology201/part1/macros/src/main/scala/Internal210.scala
@@ -15,7 +15,7 @@ object Compat210 {
   object decorators // Context.decorators object
   object contexts // scala.reflect.macros.contexts package
 }
-import Compat210._
+import iota.module.macros.Compat210._
 
 // unifies scala.reflect.macros.runtime.Context (Scala 2.10)
 // and scala.reflect.macros.contexts.Context (Scala 2.11)
@@ -24,17 +24,15 @@ private[iota] object Power {
   object DummyScope
   {
     import runtime._
-    import contexts._
     type Result = Context
   }
   type PowerContext = DummyScope.Result
 }
-import Power._
+import iota.module.macros.Power._
 
 // a cake slice that can be mixed into improvised macro bundles
 // to transparently bring new Scala 2.11 features to Scala 2.10
 private[iota] trait Internal210 { self =>
-  import scala.reflect.macros._
   import blackbox.Context
 
   val c: Context
@@ -100,7 +98,6 @@ private[iota] trait Internal210 { self =>
   // therefore we need to settle on some sort of a middle ground
   implicit class RichSymbol(val sym: self.c.universe.Symbol) {
     def setInfoCompat(info: Type): Symbol = {
-      import compat._
       sym.setTypeSignature(info)
     }
   }

@@ -1,4 +1,4 @@
-package iota
+package iota.module
 
 import android.content.Context
 import android.content.res.TypedArray
@@ -7,6 +7,7 @@ import android.util.{AttributeSet, TypedValue}
 /**
   * @author pfnguyen
   */
+object Themes extends Themes
 private[iota] trait Themes {
   // XXX return Option[A] instead?
   /** resolve a single theme attribute */

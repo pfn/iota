@@ -1,4 +1,4 @@
-package iota
+package iota.module
 
 import android.content.Context
 import android.content.res.Configuration
@@ -9,6 +9,16 @@ import android.view.WindowManager
 /**
  * @author pfnguyen
  */
+object Configurations extends Configurations {
+  implicit class Metrics(val size: Int) extends AnyVal {
+    /** convert dp to pixel values */
+    @inline final def dp(implicit ctx: Context): Int =
+    (ctx.getResources.getDisplayMetrics.density * size).toInt
+    /** convert sp to pixel values */
+    @inline final def sp(implicit ctx: Context): Int =
+    (ctx.getResources.getDisplayMetrics.scaledDensity * size).toInt
+  }
+}
 private[iota] trait Configurations {
 
   private[this] lazy val displaySize = new Point(-1, -1)

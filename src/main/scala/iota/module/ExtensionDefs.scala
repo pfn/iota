@@ -1,10 +1,10 @@
 package iota.module
 
+import iota.module.macros.ExtensionDefsMacro
+
 /**
   * @author pfnguyen
   */
-
-class AndroidTypeclass(register: List[String], callback: String) extends annotation.StaticAnnotation
 
 object ExtensionDefs {
   def materializeTypeclassInstance[C[_],A : c.WeakTypeTag](c: reflect.macros.Context)(implicit ctag: c.WeakTypeTag[C[A]]): c.Expr[C[A]] =

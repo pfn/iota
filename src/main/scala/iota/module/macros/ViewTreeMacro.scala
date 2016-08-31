@@ -1,9 +1,10 @@
-package iota
+package iota.module.macros
 
-import android.view.View
-import android.view.ViewGroup
-import android.content.{Context => AndroidContext}
 import android.annotation.TargetApi
+import android.content.{Context => AndroidContext}
+import android.view.{View, ViewGroup}
+import iota.module.ViewTree
+
 import scala.reflect.api.Universe
 
 /**
@@ -76,7 +77,7 @@ private[iota] object ViewTreeMacro {
         applySym.paramss.head.zipWithIndex.map { case (p,i) =>
           (newTermName(p.name.encoded), TypeTree(p.typeSignature),
             if (p.asTerm.isParamWithDefault) {
-              import scala.reflect.internal.{Definitions, SymbolTable, StdNames}
+              import scala.reflect.internal.{Definitions, StdNames, SymbolTable}
               val u = c.universe.asInstanceOf[Definitions with SymbolTable with StdNames]
               val getter = u.nme.defaultGetterName(u.newTermName("apply"), i + 1)
               Option(Select(Ident(inflater.tree.symbol), newTermName(getter.encoded)))
@@ -257,7 +258,7 @@ private[iota] object ViewTreeMacro {
     }.headOption
 
     val syms = inflaterSymbols(c)(inflater.tree, Nil)
-    import scala.reflect.internal.{Definitions, SymbolTable, StdNames}
+    import scala.reflect.internal.{Definitions, StdNames, SymbolTable}
     val u = c.universe.asInstanceOf[Definitions with SymbolTable with StdNames]
 
     def handlePattern(pat: Tree, body: Tree): List[Pattern] = pat match {

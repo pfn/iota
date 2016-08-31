@@ -1,8 +1,10 @@
-package iota
+package iota.module.macros
 
 import java.io.{FileOutputStream, OutputStreamWriter}
 
 import android.view.View
+import iota._
+import iota.module.Combinators
 
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag

@@ -6,8 +6,8 @@ boilerplate is still required.
 
 ## Features
 
-1. **Uses the typeclass pattern** - automatically add extensions by creating
-   and/or summoning typeclass instances
+1. **[Uses the typeclass pattern](https://tpolecat.github.io/2013/10/12/typeclass.html)** -
+   automatically add extensions by creating and/or summoning typeclass instances
 2. **[Simple to add extensions](#defining-new-extensions)** - new extension
    functions can be added by defining typeclass traits, and using the macro
    `ExtensionDefs.materializeTypeclassInstance` annotated with

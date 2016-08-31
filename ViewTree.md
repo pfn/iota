@@ -87,7 +87,7 @@ In XML:
 
 In Scala with ViewTree
 
-```
+```scala
 package iota.sample
 
 import android.os.Bundle
@@ -95,7 +95,6 @@ import android.support.v7.app.AppCompatActivity
 import android.graphics.drawable.Animatable
 import android.widget._
 import android.view.ViewGroup.LayoutParams._
-import android.view.View.OnClickListener
 import iota._
 
 class MainActivity extends AppCompatActivity { self =>
@@ -143,26 +142,26 @@ class MainActivity extends AppCompatActivity { self =>
         image.weight(1)
         image.setImageResource(R.drawable.waving_scala_android)
         ok.setText("Ok")
+
         cancel.setText("Cancel")
     }
-    
     override def onCreate(savedInstanceState: Bundle): Unit = {
         super.onCreate(savedInstanceState)
         setContentView(views.container)
-        views.ok.setOnClickListener(single0[OnClickListener] {
+        views.ok.onClick {
             views.text.setText("I am OK!")
             views.image.getDrawable match {
               case a: Animatable => a.start()
               case _ => // not animatable
             }
-        })
-        views.cancel.setOnClickListener(single0[OnClickListener] {
+        }
+        views.cancel.onClick {
             views.text.setText("I have been stopped!")
             views.image.getDrawable match {
               case a: Animatable => a.stop()
               case _ => // not animatable
             }
-        })
+        }
     }
 }
 ```

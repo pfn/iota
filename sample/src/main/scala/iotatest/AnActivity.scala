@@ -264,13 +264,56 @@ object Foo {
   text.onClickEx { view => "" }
   text.onTouchEx { (a, b) => true }
   text.onTouch { true }
+  import FooExt._
+  text.onChange {
+    ()
+  }
+  text.onChangeEx { (s, start, before, count) =>
+  }
+  materializeCanAnimOnEnd[android.animation.Animator]
+  val anim: android.animation.Animator = ???
+  anim.onEnd {
+  }
+  val anim2: android.view.animation.Animation = ???
+  anim2.onEndEx { a =>
+  }
 }
 
-//object FooExt {
-//  import language.experimental.macros
-//  object Mat2 {
-//    @AndroidTypeclass(List("apply"), "")
-//    implicit def materialize[A]: Option[A] = macro ExtensionDefs.materializeTypeclassInstance[Option,A]
-//  }
-//}
+object FooExt extends TextExt with AnimExt
+// LIMITATION, typeclass traits must be defined in a top-level construct and
+// cannot be path-dependent
+object ExtTypeclasses {
+  trait CanTextViewOnChange[A] {
+    def onTextChanged[B](a: A)(handler: => B)
+    def onTextChanged2[B](a: A)(handler: (CharSequence, Int, Int, Int) => B)
+  }
+  trait CanAnimOnEnd[A] {
+    def onAnimEnd[B](a: A)(handler: => B)
+    def onAnimEnd2[B](a: A)(handler: A => B)
+  }
+}
+trait TextExt {
+  import language.experimental.macros
+  import ExtTypeclasses._
+  import iota.module.AndroidTypeclass
+  import iota.module.ExtensionDefs
+  implicit class AnyCanOnChange[A : CanTextViewOnChange](a: A) {
+    def onChange[B](handler: => B) = implicitly[CanTextViewOnChange[A]].onTextChanged(a)(handler)
+    def onChangeEx[B](handler: (CharSequence, Int, Int, Int) => B) = implicitly[CanTextViewOnChange[A]].onTextChanged2(a)(handler)
+  }
+  @AndroidTypeclass(List("addTextChangedListener"), "onTextChanged")
+  implicit def materializeCanTextViewOnChange[A]: CanTextViewOnChange[A] = macro ExtensionDefs.materializeTypeclassInstance[CanTextViewOnChange,A]
+}
 
+trait AnimExt {
+  import language.experimental.macros
+  import ExtTypeclasses._
+  import iota.module.AndroidTypeclass
+  import iota.module.ExtensionDefs
+  implicit class AnyAnimEnd[A : CanAnimOnEnd](a: A) {
+    def onEnd[B](handler: => B) = implicitly[CanAnimOnEnd[A]].onAnimEnd(a)(handler)
+    def onEndEx[B](handler: A => B) = implicitly[CanAnimOnEnd[A]].onAnimEnd2(a)(handler)
+  }
+  @AndroidTypeclass(List("addListener", "setAnimationListener"), "onAnimationEnd")
+  implicit def materializeCanAnimOnEnd[A]: CanAnimOnEnd[A] = macro ExtensionDefs.materializeTypeclassInstance[CanAnimOnEnd,A]
+}

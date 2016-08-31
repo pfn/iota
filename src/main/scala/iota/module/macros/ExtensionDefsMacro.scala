@@ -64,11 +64,11 @@ private[iota] object ExtensionDefsMacro {
           } else {
             t.typeSignature match {
               case TypeRef(pre, sym, ts) =>
-                AppliedTypeTree(Ident(sym), ts.map(t => Ident(t.typeSymbol.name)))
                 AppliedTypeTree(Ident(sym), ts.map { t =>
-                  if (t.typeSymbol.isParameter)
-                    Ident(t.typeSymbol.name)
-                  else
+                  if (t.typeSymbol.isParameter) {
+                    if (t.typeSymbol.name.encoded == "A") TypeTree(viewType)
+                    else Ident(t.typeSymbol.name)
+                  } else
                     TypeTree(t)
                 })
               case y => TypeTree(y)

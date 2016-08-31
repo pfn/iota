@@ -62,57 +62,87 @@ class ConversionsGenerator {
       val last = cls.takeWhile(_ != '$')
       val prefix = if (last.isEmpty) cls else last
 
-      (prefix + x._1.callbackMethod.capitalize) -> x._2
-    }
-    println(data.map(_._2.intf.cls.split('.').take(2).mkString(".")).distinct.mkString("\n"))
+      val grp = x._2.intf.cls.split('.').take(2).mkString(".")
+      (grp, prefix + x._1.callbackMethod.capitalize, x._2)
+    }.groupBy(_._1)
+    def startsWithOnPrefix(x: (String, String, TypeclassDefinition)) = x._3.intf.callbackMethod.startsWith("on")
 
-    val x = new File(srcManaged, "x.scala")
-    val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(x), "utf-8"))
-    fout.println("package iota")
-    fout.println("import annotation.implicitNotFound")
-    fout.println("trait GeneratedAndroidExtensions extends Any {")
-    val corePrefixes =
-      "android.app." :: "android.view." :: "android.widget." :: "android.content." :: Nil
-    def startsWithCorePrefix(s: String) = corePrefixes.exists(s.startsWith)
-    val classes = data/*.partition(d => startsWithCorePrefix(d._2.intf.cls))._1*/ map { case (tc,tcd) =>
+    data.flatMap { case (k, v) =>
+      writeTypeclassTraits(srcManaged, k, v.filter(startsWithOnPrefix)) ::
+      writeTypeclassExtensions(srcManaged, k, v.filter(startsWithOnPrefix)) ::
+      Nil
+    }.toList.asJava
+  }
+
+  def writeTypeclassExtensions(target: File, pkg: String, data: List[(String,String,TypeclassDefinition)]): File = {
+    val genName = "Generated" + pkg.split('.').map(_.capitalize).mkString + "Extensions"
+    val genTraits = "GeneratedCan" + pkg.split('.').map(_.capitalize).mkString
+    val f = new File(target, genName + ".scala")
+    val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), "utf-8"))
+    fout.println("package iota.module.extension")
+    fout.println("import iota.AndroidTypeclass")
+    fout.println("import iota.ExtensionDefs")
+    fout.println(s"import iota.module.typeclass.$genTraits._")
+    fout.println(s"trait $genName {")
+    val classes = data.map { case (grp, tc, tcd) =>
       val sb = new StringBuilder
       val methods = tcd.registerMethod.map(m => s""""$m"""").mkString(",")
       val tcname = "Can" + tc
 
       sb.append("  // for " + tcd.intf.cls)
-      sb.append("\n")
       val name2 = tcd.intf.callbackMethod
-      val traits = if (tcd.intf.args.isEmpty) {
-        s"    def ${decapitalize(name2)}${conversionWildcards(tcd.intf)}(a: A, fn: ${byNameSignature(tcd.intf)})"
-      } else {
-        s"""    def $name2${conversionWildcards(tcd.intf)}(a: A, fn: ${byNameSignature(tcd.intf)})
-           |    def ${name2}Ex${conversionWildcards(tcd.intf)}(a: A, fn: ${fnNSignature(tcd.intf)})""".stripMargin
-      }
       val exts = if (tcd.intf.args.isEmpty) {
-        s"    def $name2${conversionWildcards(tcd.intf)}(fn: ${byNameSignature(tcd.intf)}) = implicitly[$tcname[A]].$name2(a, fn)"
+        s"    def $name2${conversionWildcards(tcd.intf)}(fn: ${byNameSignature(tcd.intf)}) = implicitly[$tcname[A]].$name2(a)(fn)"
       } else {
-        s"""    @inline def $name2${conversionWildcards(tcd.intf)}(fn: ${byNameSignature(tcd.intf)}) = implicitly[$tcname[A]].$name2(a, fn)
-           |    @inline def ${name2}Ex${conversionWildcards(tcd.intf)}(fn: ${fnNSignature(tcd.intf)}) = implicitly[$tcname[A]].${name2}Ex(a, fn)""".stripMargin
+        s"""    @inline def $name2${conversionWildcards(tcd.intf)}(fn: ${byNameSignature(tcd.intf)}) = implicitly[$tcname[A]].$name2(a)(fn)
+            |    @inline def ${name2}Ex${conversionWildcards(tcd.intf)}(fn: ${fnNSignature(tcd.intf)}) = implicitly[$tcname[A]].${name2}Ex(a)(fn)""".stripMargin
       }
-      val trt = s"""  @implicitNotFound("Could not find a way to add '${tcd.callbackMethod}' to $${A}")
-                   |  trait $tcname[A] extends Any {
-                   |$traits
-                   |  }""".stripMargin
-      sb.append(trt)
       sb.append("\n")
       sb.append(s"""  @AndroidTypeclass(List($methods), "${tcd.callbackMethod}")""")
       sb.append("\n")
       sb.append(s"""  implicit def materialize$tcname[A]: $tcname[A] = macro ExtensionDefs.materializeTypeclassInstance[$tcname,A]""")
       sb.append("\n")
       sb.append(s"""  implicit class Any$tcname[A : $tcname](val a: A) {
-                 |$exts
-                 |  }\n""".stripMargin)
+                    |$exts
+                    |  }\n""".stripMargin)
       sb.mkString
     }
     fout.println(classes.mkString)
     fout.println("}")
     fout.close()
-    List(x).asJava
+    f
+  }
+  def writeTypeclassTraits(target: File, pkg: String, data: List[(String,String,TypeclassDefinition)]): File = {
+    val genName = "GeneratedCan" + pkg.split('.').map(_.capitalize).mkString
+    val f = new File(target, genName + ".scala")
+    val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), "utf-8"))
+    fout.println("package iota.module.typeclass")
+    fout.println("import annotation.implicitNotFound")
+    fout.println(s"object $genName {")
+    val classes = data.map { case (grp, tc, tcd) =>
+      val sb = new StringBuilder
+      val tcname = "Can" + tc
+
+      sb.append("  // for " + tcd.intf.cls)
+      sb.append("\n")
+      val name2 = tcd.intf.callbackMethod
+      val traits = if (tcd.intf.args.isEmpty) {
+        s"    def ${decapitalize(name2)}${conversionWildcards(tcd.intf)}(a: A)(fn: ${byNameSignature(tcd.intf)})"
+      } else {
+        s"""    def $name2${conversionWildcards(tcd.intf)}(a: A)(fn: ${byNameSignature(tcd.intf)})
+           |    def ${name2}Ex${conversionWildcards(tcd.intf)}(a: A)(fn: ${fnNSignature(tcd.intf)})""".stripMargin
+      }
+      val trt = s"""  @implicitNotFound("Could not find a way to add '${tcd.callbackMethod}' to $${A}")
+                   |  trait $tcname[A] extends Any {
+                   |$traits
+                   |  }""".stripMargin
+      sb.append(trt)
+      sb.mkString
+    }
+    fout.println(classes.mkString("\n"))
+    fout.println("}")
+    fout.close()
+    f
   }
 
   def collectPublics(androidJar: File, android: ClassLoader): Set[String] = {
@@ -241,9 +271,9 @@ class ConversionsGenerator {
     reader.accept(classNode, 0)
 
     if (isPublic(classNode.access) && !isNestedClass(classNode) && classNode.name.startsWith("android")) {
-      val methods = classNode.methods.asScala collect { case m: MethodNode => m } filter { case method =>
+      val methods = classNode.methods.asScala collect { case m: MethodNode => m } filter { method =>
         val params = Type.getArgumentTypes(method.desc)
-        method.name.startsWith("set") && params.length == 1 && (params map (_.getClassName) exists ifacenames)
+        (method.name.startsWith("set") || method.name.startsWith("add")) && params.length == 1 && (params map (_.getClassName) exists ifacenames)
       }
       if (methods.nonEmpty) {
         val usages = methods.foldLeft(List.empty[InterfaceUsage]) { (ac, m) =>
@@ -306,90 +336,20 @@ class ConversionsGenerator {
     }
   }
 
-  def usageToExtension(usage: Usage): String = {
-    val cls = fixupArgType(usage.cls)
-    val clsname = cls.substring(cls.lastIndexOf(".") + 1)
-    // yuck, don't know how to detect otherwise
-    val wildcards = if (clsname == "AdapterView") "[_]" else ""
-    val names = usage.methods.distinct map { m =>
-      val name = if (m.registerMethod.startsWith("set")) {
-        m.registerMethod.drop(3)
-      } else m.registerMethod
-      val name2 = if (name.endsWith("Listener")) {
-        name.dropRight("Listener".length)
-      } else name
-
-      if (m.intf.args.isEmpty) {
-        s"""
-           |    @inline def ${decapitalize(name2)}${conversionWildcards(m.intf)}(fn: ${byNameSignature(m.intf)}) =
-           |      base.${m.registerMethod}(${conversionName(m.intf, true)}(() => fn))
-          """.stripMargin
-      } else {
-         s"""
-           |    @inline def ${decapitalize(name2)}0${conversionWildcards(m.intf)}(fn: ${byNameSignature(m.intf)}) =
-           |      base.${m.registerMethod}(${conversionName(m.intf, true)}(() => fn))
-           |    @inline def ${decapitalize(name2)}${conversionWildcards(m.intf)}(fn: ${fnNSignature(m.intf)}) =
-           |      base.${m.registerMethod}(${conversionName(m.intf, false)}(fn))
-          """.stripMargin
-      }
-    } mkString "\n"
-    s"""
-       |  implicit class ExtensionOf$clsname(val base: $cls$wildcards) extends AnyVal {
-       |    $names
-       |    def asScala = this
-       |  }
-    """.stripMargin
-  }
-
-  def interfaceToConversion(iface: Interface): String = {
-    val placeholders = if (iface.placeholders.isEmpty) "" else iface.placeholders mkString ","
-    val wildcards = if (placeholders.nonEmpty) s"[$placeholders]" else placeholders
-    val cls = fixupArgType(iface.cls)
-    val fixed = iface.args map (arg => fixupArgType(stringifyPtype(arg)))
-    val argNames = fixed zip ('a' to 'z')
-    val fargs = argNames map { case (_, n) => n } mkString ", "
-    val args = argNames map { case (t, n) => s"$n: $t" } mkString ", "
-
-    val s1 = s"""
-      |  @inline implicit def ${conversionName(iface, false)}${conversionWildcards(iface)}(fn: ${fnNSignature(iface)}): $cls$wildcards = new $cls$wildcards {
-      |    override def ${iface.callbackMethod}($args) = fn($fargs)
-      |  }
-      |
-    """.stripMargin
-    val s2 =
-      s"""
-      |  @inline implicit def ${conversionName(iface, true)}${conversionWildcards(iface)}(fn: ${fn0Signature(iface)}): $cls$wildcards = new $cls$wildcards {
-      |    override def ${iface.callbackMethod}($args) = fn()
-      |  }
-    """.stripMargin
-    if (iface.args.isEmpty) s1 else s1 + s2
-  }
-
-  def writeConversions(intfs: List[Interface], pkg: String, output: File): Unit = {
-    val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "utf-8"))
-    fout.println(s"package $pkg")
-    fout.println("import language.implicitConversions")
-    fout.println("package object conversions {")
-    intfs foreach { iface =>
-      fout.println(interfaceToConversion(iface))
-    }
-    fout.println("}")
-    fout.close()
-  }
-  def writeExtensions(usages: List[Usage], pkg: String, output: File, deppkgs: List[String]): Unit = {
-    val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "utf-8"))
-    fout.println(s"package $pkg")
-    deppkgs.foreach { d =>
-      fout.println(s"import $d.conversions._")
-    }
-    fout.println("import conversions._")
-    fout.println("package object extensions {")
-    usages foreach { usage =>
-      fout.println(usageToExtension(usage))
-    }
-    fout.println("}")
-    fout.close()
-  }
+//  def writeExtensions(usages: List[Usage], pkg: String, output: File, deppkgs: List[String]): Unit = {
+//    val fout = new PrintWriter(new OutputStreamWriter(new FileOutputStream(output), "utf-8"))
+//    fout.println(s"package $pkg")
+//    deppkgs.foreach { d =>
+//      fout.println(s"import $d.conversions._")
+//    }
+//    fout.println("import conversions._")
+//    fout.println("package object extensions {")
+//    usages foreach { usage =>
+//      fout.println(usageToExtension(usage))
+//    }
+//    fout.println("}")
+//    fout.close()
+//  }
 
   case class SigReader(signature: String) extends SignatureVisitor(Opcodes.ASM5) {
     var params = List.empty[ParamType]

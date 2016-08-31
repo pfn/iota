@@ -3,7 +3,7 @@ package iota
 /**
   * @author pfnguyen
   */
-object ExtensionDefsMacro {
+private[iota] object ExtensionDefsMacro {
   import scala.reflect.macros.Context
 
   // TODO handle registration calls that take more than just a listener class,
@@ -49,38 +49,41 @@ object ExtensionDefsMacro {
         val TypeBounds(lo, hi) = t.typeSignature
         TypeDef(Modifiers(Flag.PARAM), t.name.toTypeName, Nil, TypeBoundsTree(Ident(lo.typeSymbol.name), Ident(hi.typeSymbol.name)))
       }
-      val tipss = ti.paramss.head.map { p =>
-        val t = p.asTerm
-        val args = t.typeSignature match {
-          case TypeRef(_, k, targ :: Nil) if k == definitions.ByNameParamClass => Some(targ)
-          case _ => None
-        }
-
-        val viewtarget = if (t.typeSignature.typeSymbol.name.encoded == "A") TypeTree(viewType)
-        else {
-          t.typeSignature match {
-            case TypeRef(pre, sym, ts) =>
-              AppliedTypeTree(Ident(sym), ts.map(t => Ident(t.typeSymbol.name)))
-              AppliedTypeTree(Ident(sym), ts.map { t =>
-                if (t.typeSymbol.isParameter)
-                  Ident(t.typeSymbol.name)
-                else
-                  TypeTree(t)
-              })
-            case y => TypeTree(y)
+      val tipss = ti.paramss.zipWithIndex.map { case (ps,i) =>
+        ps.map { p =>
+          val t = p.asTerm
+          val args = t.typeSignature match {
+            case TypeRef(_, k, targ :: Nil) if k == definitions.ByNameParamClass => Some(targ)
+            case _ => None
           }
+
+          val viewtarget = if (i == 0 || t.typeSignature.typeSymbol.name.encoded == "A") {
+            TypeTree(viewType)
+          } else {
+            t.typeSignature match {
+              case TypeRef(pre, sym, ts) =>
+                AppliedTypeTree(Ident(sym), ts.map(t => Ident(t.typeSymbol.name)))
+                AppliedTypeTree(Ident(sym), ts.map { t =>
+                  if (t.typeSymbol.isParameter)
+                    Ident(t.typeSymbol.name)
+                  else
+                    TypeTree(t)
+                })
+              case y => TypeTree(y)
+            }
+          }
+          ValDef(
+            if (t.isByNameParam) Modifiers(Flag.PARAM | Flag.BYNAMEPARAM) else Modifiers(Flag.PARAM),
+            t.name.toTermName,
+            if (t.isByNameParam)
+              AppliedTypeTree(Ident(definitions.ByNameParamClass.name), Ident(args.map(_.typeSymbol.name).get) :: Nil)
+            else viewtarget,
+            EmptyTree)
         }
-        ValDef(
-          if (t.isByNameParam) Modifiers(Flag.PARAM | Flag.BYNAMEPARAM) else Modifiers(Flag.PARAM),
-          t.name.toTermName,
-          if (t.isByNameParam)
-            AppliedTypeTree(Ident(definitions.ByNameParamClass.name), Ident(args.map(_.typeSymbol.name).get) :: Nil)
-          else viewtarget,
-          EmptyTree)
       }
       val m = listenerType.member(newTermName(toImp)).asMethod
       val target = ti.paramss.head.head
-      val p = ti.paramss.head.tail.head.asTerm
+      val p = ti.paramss.drop(1).head.head.asTerm
       val listener = h.newListenerClass(listenerType,
         h.needImplementation(listenerType).filterNot(_.name.encoded == toImp),
         newListenerMethod(c)(m,
@@ -93,14 +96,14 @@ object ExtensionDefsMacro {
         )),
         ti.name,
         tds,
-        tipss :: Nil,
+        tipss,
         TypeTree(typeOf[Unit]),
         body)
     }
     val x = c.Expr[C[A]](Block(List(
       ClassDef(Modifiers(Flag.FINAL), anon, Nil,
         Template(
-          List(AppliedTypeTree(Ident(targetTpe.typeSymbol.name), TypeTree(viewType) :: Nil)),
+          List(AppliedTypeTree(Ident(targetTpe.typeSymbol), TypeTree(viewType) :: Nil)),
           emptyValDef,
           DefDef(
             Modifiers(),
@@ -112,7 +115,7 @@ object ExtensionDefsMacro {
           ) :: newlisteners.toList
         )
       ),
-      ValDef(Modifiers(Flag.PARAM), anonterm, AppliedTypeTree(Ident(targetTpe.typeSymbol.name), TypeTree(viewType) :: Nil),Apply(Select(New(Ident(anon)), nme.CONSTRUCTOR), Nil))
+      ValDef(Modifiers(Flag.PARAM), anonterm, AppliedTypeTree(Ident(targetTpe.typeSymbol), TypeTree(viewType) :: Nil),Apply(Select(New(Ident(anon)), nme.CONSTRUCTOR), Nil))
     ), Ident(anonterm)))
     x
   }

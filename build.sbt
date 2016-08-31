@@ -1,4 +1,4 @@
-val platform = "android-21"
+val platform = "android-24"
 val doGeneration = taskKey[Seq[File]]("android-conversions-generator")
 
 lazy val generator = project.settings(exportJars := true, publish := (), PgpKeys.publishSigned := ())

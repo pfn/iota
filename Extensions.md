@@ -32,11 +32,30 @@ boilerplate is still required.
      * `android.view`
      * `android.webkit`
      * `android.widget`
-4. **Sensible default extensions** - extensions from `android.view` are
-   automatically included when importing `iota._` or
-   `iota.module.DefaultExtensions._`
+4. **[Sensible default extensions](#using-default-extensions)** -
+   extensions from `android.view` are automatically included when
+   importing `iota._` or `iota.module.DefaultExtensions._`. By
+   convention, extension functions with an `Ex` suffix handle all of the
+   callback's parameters. Without the `Ex` suffix, it is simply called
+   as a by-name thunk.
    
 ### Usage
+
+#### Using default extensions
+
+Default extensions are easy to use, import `iota._` or `iota.module.DefaultExtensions._`
+and you're ready to go!
+
+```
+import iota._
+class PerhapsAnActivity extends android.app.Activity {
+  val button: Button = ???
+  button.onClick {
+    finish() // yay, we're done!
+  }
+  ...
+}
+```
 
 #### Including pre-defined extensions
 
@@ -70,7 +89,7 @@ class PerhapsAnActivity extends android.app.Activity {
 }
 ```
 
-### Defining new extensions
+#### Defining new extensions
 
 The pre-defined extensions are created on the basis of a very narrow set
 of rules. The Listener class must have only a single abstract method,
@@ -99,6 +118,7 @@ class PerhapsAnotherActivity extends android.app.Activity {
   anim2.onEndEx { a =>
     ...
   }
+  ...
 }
 
 object CustomExtensions extends TextExt with AnimExt

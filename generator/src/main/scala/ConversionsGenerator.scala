@@ -68,9 +68,12 @@ class ConversionsGenerator {
     def startsWithOnPrefix(x: (String, String, TypeclassDefinition)) = x._3.intf.callbackMethod.startsWith("on")
 
     data.flatMap { case (k, v) =>
-      writeTypeclassTraits(srcManaged, k, v.filter(startsWithOnPrefix)) ::
-      writeTypeclassExtensions(srcManaged, k, v.filter(startsWithOnPrefix)) ::
-      Nil
+      val callbacks = v.filter(startsWithOnPrefix)
+      if (callbacks.nonEmpty) {
+        writeTypeclassTraits(srcManaged, k, callbacks) ::
+          writeTypeclassExtensions(srcManaged, k, callbacks) ::
+          Nil
+      } else Nil
     }.toList.asJava
   }
 

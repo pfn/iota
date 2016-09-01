@@ -1,9 +1,6 @@
 package iota.module
 
-import iota._
-import iota.module.macros.{AutoKMacro, Internal210}
-
-import scala.reflect.macros.Context
+import iota.module.macros.AutoKMacro
 
 /**
   * @author pfnguyen

@@ -1,7 +1,5 @@
 package iota.module
 
-import iota.{module, _}
-
 /**
   * @author pfnguyen
   */
@@ -17,7 +15,7 @@ private[iota] trait TernaryOps {
     *  for example: `condK(istrue ? (yes => IO[yes]) | (no => IO[no]))`
     */
   def condK[A](ternary: Ternary[A]): Kestrel[A] = ternary match {
-    case TernaryCondition(b, ifTrue) => if (b)      ifTrue      else module.Combinators.noopK[A]
+    case TernaryCondition(b, ifTrue) => if (b)      ifTrue      else Combinators.noopK[A]
     case TernaryElse(cond, ifFalse)  => if (cond.b) cond.ifTrue else ifFalse
   }
 }

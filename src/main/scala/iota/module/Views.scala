@@ -6,7 +6,6 @@ import iota.module.macros.{IdMacros, ViewIdType, ViewMacros}
 
 import scala.reflect.ClassTag
 
-
 /**
   * @author pfnguyen
   */

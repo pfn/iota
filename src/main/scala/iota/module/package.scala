@@ -21,5 +21,8 @@ package object module {
     override def reportFailure(t: Throwable) = Log.e("IOTA", t.getMessage, t)
   }
 
+  /** annotation to configure `macro ExtensionDefs.materializeTypeclassInstance[A,B]`
+    * arguments: (list of register methods, callback method)
+    */
   type AndroidTypeclass = macros.AndroidTypeclass
 }

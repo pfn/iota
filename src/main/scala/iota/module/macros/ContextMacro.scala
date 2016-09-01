@@ -14,7 +14,8 @@ private[iota] object ContextMacro {
     "android.app.Fragment" ::
     "android.view.View" ::
     "android.support.v4.app.Fragment" ::
-    "iota.WithContext" ::
+    "iota.HasContext" ::
+    "iota.HasActivity" ::
     Nil
   def materializeContextImpl(c: MacroContext): c.Expr[AndroidContext] = {
     import c.universe._
@@ -97,6 +98,7 @@ private[iota] object ContextMacro {
       v.replaceAll("_", "") -> v
     } toSeq
   }
+
   def materializeSystemServiceImpl[T: c.WeakTypeTag](c: MacroContext): c.Expr[SystemService[T]] = {
     import c.universe._
     val tpe = weakTypeOf[T]
@@ -112,7 +114,6 @@ private[iota] object ContextMacro {
       List(TypeTree(tpe))
     ), List(Literal(Constant(service)))))
   }
-
 
   def create[A <: android.view.View : c.WeakTypeTag](c: MacroContext)(args: c.Expr[Any]*): c.Expr[A] = {
     import c.universe._
@@ -144,5 +145,5 @@ trait HasActivity {
 @implicitNotFound("Unable to find a service constant for ${T},\n" +
   "add the following implicit value to your code if this is not a mistake:\n    " +
   "'implicit val `systemService for ${T}` =\n      " +
-  "SystemService[${T}](GET_SERVICE_CONSTANT)`'")
+  "iota.module.macros.SystemService[${T}](GET_SERVICE_CONSTANT)`'")
 case class SystemService[T](name: String) extends AnyVal

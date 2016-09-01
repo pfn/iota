@@ -21,7 +21,15 @@ object Contexts extends Contexts {
   }
 }
 private[iota] trait Contexts {
+  /** When a `android.content.Context` can't be found automatically using
+    * the implicits in `iota._` or `Contexts._` implement this trait
+    * to help the implicit out
+    */
   type HasContext = macros.HasContext
+  /** When an `android.app.Activity` can't be found automatically using
+    * the implicits in `iota._` or `Contexts._` implement this trait
+    * to help the implicit out
+    */
   type HasActivity = macros.HasActivity
   /** pull a context out of "thin air", checks for Activity, Fragment and WithContext */
   implicit def materializeContext: AndroidContext = macro ContextMacro.materializeContextImpl

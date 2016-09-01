@@ -6,12 +6,12 @@ import android.view.{View, ViewGroup}
 import iota.module.ViewTree
 
 import scala.reflect.api.Universe
+import scala.reflect.macros.Context
 
 /**
   * @author pfnguyen
   */
 private[iota] object ViewTreeMacro {
-  import scala.reflect.macros.Context
 
   def nest[B <: ViewGroup : c.WeakTypeTag](c: Context)(views: c.Expr[View]*)(body: c.Expr[Any]): c.Expr[B] = {
     import c.universe._

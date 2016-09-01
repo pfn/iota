@@ -8,6 +8,7 @@ import scala.reflect.macros.Context
 /**
   * @author pfnguyen
   */
+@deprecated("don't use arbitrary IDs", "2.0.0")
 object Id extends Dynamic {
   // identifiers must be consistent for use with id() and findView() --
   // convert Id.x into a literal value that does not change between builds

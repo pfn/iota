@@ -1,5 +1,5 @@
 package iota
-import iota.module.{AutoK, Combinators, FutureCombinators, IO, LayoutCombinators, TernaryCondition, TernaryOps, ViewCombinators, Views}
+import iota.module.{AutoK, Combinators, FutureCombinators, LayoutCombinators, TernaryCondition, TernaryOps, ViewCombinators, Views}
 import iota.module.macros.{IdMacros, ViewIdType}
 
 import scala.reflect.ClassTag

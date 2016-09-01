@@ -8,7 +8,6 @@ import android.text.Html
 import android.text.method.TransformationMethod
 import android.view.{View, ViewGroup, ViewPropertyAnimator}
 import android.widget.{ImageView, TextView}
-import iota._
 import iota.module.macros.{HookMacro, IdMacros}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}

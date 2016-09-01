@@ -112,6 +112,7 @@ class MainActivity extends AppCompatActivity { self =>
     ) extends ViewTree[LinearLayout] {
         container.setOrientation(LinearLayout.VERTICAL)
         pb2.setIndeterminate(true)
+        pb2.matchWidth()
     }
     case class Main(
         container: LinearLayout,
@@ -128,13 +129,9 @@ class MainActivity extends AppCompatActivity { self =>
           cancel.weight(0.5f)
         }
         buttons.lp(MATCH_PARENT, WRAP_CONTENT)
-        buttons.marginBottom(8.dp)
-        buttons.marginLeft(8.dp)
-        buttons.marginRight(8.dp)
+        buttons.marginBottom(8.dp).marginLeft(8.dp).marginRight(8.dp)
 
-        text.lp(MATCH_PARENT, WRAP_CONTENT)
-        text.marginTop(8.dp)
-        text.marginLeft(8.dp)
+        text.matchWidth().marginTop(8.dp).marginLeft(8.dp)
         text.setText(s"Hello world, from ${TR.string.app_name.value}")
         text.setTextAppearance(self, android.R.style.TextAppearance_Large)
 

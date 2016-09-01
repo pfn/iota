@@ -68,6 +68,7 @@ libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
   case Some((2, 10)) => "org.scala-lang" % "scala-reflect" % scalaVersion.value :: Nil
   case _ => Nil
 })
+libraryDependencies in sample += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile-internal"
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
 

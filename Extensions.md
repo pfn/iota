@@ -154,3 +154,11 @@ trait AnimExt {
   implicit def materializeCanAnimOnEnd[A]: CanAnimOnEnd[A] = macro ExtensionDefs.materializeTypeclassInstance[CanAnimOnEnd,A]
 }
 ```
+
+When defining macros, such as the above, `scala-reflect` must be added
+as a compile-time dependency to the project. This can be done by adding
+the following rule to `build.sbt`
+
+```scala
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile-internal"
+```

@@ -33,6 +33,7 @@ lazy val macros = project.settings(
 
 lazy val root = project.in(file(".")).settings(
   mappings in (Compile,packageBin) <++= mappings in (macros,Compile,packageBin),
+  mappings in (Compile,packageSrc) <++= mappings in (macros,Compile,packageSrc),
   scalacOptions in Compile += "-language:experimental.macros"
 ).dependsOn(macros % "compile-internal", generator % "compile-internal").settings(buildWith(macros):_*)
 

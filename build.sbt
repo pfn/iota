@@ -35,7 +35,7 @@ lazy val root = project.in(file(".")).settings(
   mappings in (Compile,packageBin) <++= mappings in (macros,Compile,packageBin),
   mappings in (Compile,packageSrc) <++= mappings in (macros,Compile,packageSrc),
   scalacOptions in Compile += "-language:experimental.macros"
-).dependsOn(macros % "compile-internal", generator % "compile-internal").settings(buildWith(macros):_*)
+).dependsOn(macros % "compile-internal", generator % "compile-internal")
 
 doGeneration in root := {
   val bcp = (bootClasspath in root).value
@@ -45,13 +45,13 @@ doGeneration in root := {
 
 sourceGenerators in (root,Compile) <+= doGeneration in root
 
-lazy val sample = project.settings(androidBuildJar: _*).settings(
+lazy val sample = project.enablePlugins(AndroidJar).settings(
   platformTarget := platform,
   classDirectory in Compile := crossTarget.value / "classes",
   crossScalaVersions += "2.11.7"
-).dependsOn(root).settings(buildWith(root):_*)
+).dependsOn(root)
 
-androidBuildJar
+enablePlugins(AndroidJar)
 
 classDirectory in Compile := crossTarget.value / "classes"
 

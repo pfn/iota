@@ -294,21 +294,24 @@ private[iota] object ViewTreeMacro {
     val nul = typeOf[Null]
     def isEmpty(t: Type) = t <:< nothing || t <:< nul
     val symbols = syms.fold(_ => Map.empty[String, c.Type], identity)
-    val errors = cases.foldLeft(List.empty[(c.Position,String)]) {
-      case (errs, (n, pat, body, _)) => n.toList.flatMap { nm =>
-        symbols.get(nm).fold(List(pat.pos -> s"not found in ${inflater.tree.symbol.companionSymbol}: pattern '$nm'")) { tpe =>
-          if (!(body.tpe <:< tpe) || isEmpty(body.tpe)) {
-            List(body.pos -> (s"ViewTree type mismatch;\n" +
-              s" found    : ${body.tpe}\n" +
-              s" required : $tpe"))
+    if (!nowarn) {
+      val errors = cases.foldLeft(List.empty[(c.Position,String)]) {
+        case (errs, (n, pat, body, _)) => n.toList.flatMap { nm =>
+        val companion = Option(inflater.tree.symbol).fold("anonymous factory") { _.companionSymbol.toString }
+          symbols.get(nm).fold(List(pat.pos -> s"not found in $companion: pattern '$nm'")) { tpe =>
+            if (!(body.tpe <:< tpe) || isEmpty(body.tpe)) {
+              List(body.pos -> (s"ViewTree type mismatch;\n" +
+                s" found    : ${body.tpe}\n" +
+                s" required : $tpe"))
+            }
+            else Nil
           }
-          else Nil
-        }
-      } ++ errs
-    }
-    if (errors.nonEmpty) {
-      errors.foreach { case (pos, e) => c.error(pos, e) }
-      c.abort(c.enclosingPosition, "ViewTree factory type inspection failed")
+        } ++ errs
+      }
+      if (errors.nonEmpty) {
+        errors.foreach { case (pos, e) => c.error(pos, e) }
+        c.abort(c.enclosingPosition, "ViewTree factory type inspection failed")
+      }
     }
 
     factory

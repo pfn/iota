@@ -413,20 +413,26 @@ private[iota] object ViewTreeMacro {
 
   def checkLayoutConstraint(c: Context)(op: String, lpt: c.Type): Unit = {
     import c.universe._
-    val lt = layoutType(c, op)
-    val lpc = typeOf[ViewTree.LayoutParamConstraint[_]]
-    val lc = typeOf[ViewTree.LayoutConstraint[_]]
-    val lc2 = typeOf[ViewTree.LayoutConstraint2[_]]
     val owner = c.macroApplication.symbol.owner
+    val lpc = typeOf[ViewTree.LayoutParamConstraint[_]]
     val lpcType = owner.typeSignature.baseType(lpc.typeSymbol)
-    if (lpcType != NoType && !(lpt <:< typeParamOf(c)(lpcType))) {
+
+    if (lpcType == NoType) {
+      // I don't know how to get LayoutConstraint with both parameters unbound
+      // do this as a workaround and re-apply the type
+      val lcStub = c.typeOf[ViewTree.LayoutConstraint[ViewTree.ViewGravityLayoutExtensions,_]]
+      val lt = layoutType(c, op)
+      val lc = appliedType(lcStub, owner.asType.toType.typeConstructor :: lt :: Nil)
+      val inferred = c.inferImplicitValue(lc, withMacrosDisabled = true)
+      if (inferred == EmptyTree) {
+        val cname = "constraint" + owner.asType.toType.typeConstructor.typeSymbol.name.encoded + lt.typeSymbol.name.encoded
+        c.abort(c.macroApplication.pos, s"'.$op' cannot be used in $lt\n" +
+          "if this is incorrect, add the following definition to scope:\n" +
+          s"  implicit val $cname: $lc = null\n\n"
+        )
+      }
+    } else if (lpcType != NoType && !(lpt <:< typeParamOf(c)(lpcType))) {
       c.abort(c.macroApplication.pos, s"$op cannot be used in $lpt only in ${typeParamOf(c)(lpcType)}")
-    }
-    val lcType = owner.typeSignature.baseType(lc.typeSymbol)
-    val lc2Type = owner.typeSignature.baseType(lc2.typeSymbol)
-    val lcs = List(lcType, lc2Type).filter(_ != NoType).map(x => typeParamOf(c)(x))
-    if (lcs.nonEmpty && !lcs.exists(lt <:< _)) {
-      c.abort(c.macroApplication.pos, s"'.$op' cannot be used in $lt only in ${lcs.mkString(" or ")}")
     }
   }
 

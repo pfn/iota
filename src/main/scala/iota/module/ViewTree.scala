@@ -86,9 +86,14 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
   type Children = Either[ViewTree[_], _ <: View]
 
   /** describes which viewgroup can use a contained layout param decorator */
-  trait LayoutConstraint[A <: ViewGroup] extends Any
-  /** a second layout type constraint, `OR`d with any other `LayoutConstraint` */
-  trait LayoutConstraint2[A <: ViewGroup] extends Any
+  trait LayoutConstraint[A[_ <: View], -B <: ViewGroup] extends Any
+  object LayoutConstraint {
+    implicit val gravityLinearLayoutConstraint: LayoutConstraint[ViewGravityLayoutExtensions,LinearLayout] = null
+    implicit val gravityFrameLayoutConstraint: LayoutConstraint[ViewGravityLayoutExtensions,FrameLayout] = null
+    implicit val linearLayoutWeightConstraints: LayoutConstraint[ViewLinearLayoutExtensions,LinearLayout] = null
+    implicit val gridLayoutSpecConstraints: LayoutConstraint[ViewGridLayoutExtensions,GridLayout] = null
+    implicit val relativeLayoutParamConstraints: LayoutConstraint[ViewRelativeLayoutExtensions,RelativeLayout] = null
+  }
   /** describes which layout params type can use a contained layout param decorator */
   trait LayoutParamConstraint[A <: ViewGroup.LayoutParams] extends Any
 
@@ -105,15 +110,15 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
     def wrapHeight ():           A = macro ViewTreeMacro.layoutParamField2[A]
   }
   /** decorators for containers that support gravity, `LinearLayout` and `FrameLayout` */
-  case class ViewGravityLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[LinearLayout] with LayoutConstraint2[FrameLayout] {
+  case class ViewGravityLayoutExtensions[A <: View](v: A) extends AnyVal {
     def gravity(value: Int): A = macro ViewTreeMacro.layoutParamField[A]
   }
   /** layout param decorators for `LinearLayout`s */
-  case class ViewLinearLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[LinearLayout] {
+  case class ViewLinearLayoutExtensions[A <: View](v: A) extends AnyVal {
     def weight(value: Float): A = macro ViewTreeMacro.layoutParamField[A]
   }
   /** layout param decorators for `GridLayout`s */
-  case class ViewGridLayoutExtensions[A <: View](v: A) extends AnyVal with LayoutConstraint[GridLayout] {
+  case class ViewGridLayoutExtensions[A <: View](v: A) extends AnyVal {
     def rowSpec(value: GridLayout.Spec): A = macro ViewTreeMacro.layoutParamField[A]
     def colSpec(value: GridLayout.Spec): A = macro ViewTreeMacro.layoutParamField[A]
   }
@@ -126,7 +131,7 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
     def marginRight (value: Int): A = macro ViewTreeMacro.layoutParamField[A]
   }
   /** relativelayout param decorators */
-  case class ViewRelativeLayoutExtensions[A <: View](v: View) extends AnyVal with LayoutConstraint[RelativeLayout] {
+  case class ViewRelativeLayoutExtensions[A <: View](v: View) extends AnyVal {
     def above                   (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
     def alignBaseLine           (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]
     def alignBottom             (view: View): A = macro ViewTreeMacro.relativeLayoutParamView[A]

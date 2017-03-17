@@ -391,7 +391,7 @@ private[iota] object ViewTreeMacro {
     val trees = enclosingTrees(c)
     val target = c.macroApplication
     val pf: PartialFunction[Tree, Name] = {
-      case Apply(Apply(TypeApply(Ident(name), List(Ident(tpe))), List(views)), body)
+      case Apply(Apply(TypeApply(Ident(name), List(Ident(tpe))), List(_*)), body)
         if name.encoded == "nest" && body.exists(b => b.pos == target.pos || b.children.exists(_.pos == target.pos)) => tpe
     }
     (target.collect(pf) ++ trees.foldLeft(List.empty[c.Name]) { (a, t) =>

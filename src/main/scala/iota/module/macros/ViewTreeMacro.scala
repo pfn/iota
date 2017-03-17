@@ -221,28 +221,34 @@ private[iota] object ViewTreeMacro {
     else Select(ownerTree, t.typeSymbol.companionSymbol)
   }
 
+  def inflaterSymbolsInternal(c: Context)(args: List[(c.Type, String)], prefix: List[String]): Either[(c.Position,String),Map[String,c.Type]] = {
+    import c.universe._
+    val rs = args.map { case (tpe,nme) =>
+      if (tpe <:< typeOf[View]) {
+        Right(Map((nme :: prefix).reverse.mkString(".") -> tpe))
+      } else if (tpe <:< typeOf[ViewTree[_]]) {
+        inflaterSymbols(c)(nestedApply(c)(tpe), nme :: prefix)
+      } else {
+        Right(Map.empty)
+      }
+    }
+    rs.foldLeft(Right(Map.empty) :Either[(c.Position,String),Map[String,c.Type]]) {
+      case (a,r) =>
+        for {
+          ac <- a.right
+          m <- r.right
+        } yield ac ++ m
+    }
+  }
   def inflaterSymbols(c: Context)(inflater: c.Tree, prefix: List[String]): Either[(c.Position,String),Map[String,c.Type]] = {
     import c.universe._
     inflater match {
       case TypeTree() | Select(_, _) | Ident(_) =>
         val applySym = inflater.symbol.typeSignature.member(newTermName("apply")).asMethod
 
-        val rs = applySym.paramss.head.zipWithIndex.map { case (p,i) =>
-          if (p.typeSignature <:< typeOf[View]) {
-            Right(Map((p.name.encoded :: prefix).reverse.mkString(".") -> p.typeSignature))
-          } else if (p.typeSignature <:< typeOf[ViewTree[_]]) {
-            inflaterSymbols(c)(nestedApply(c)(p.typeSignature), p.name.encoded :: prefix)
-          } else {
-            Right(Map.empty)
-          }
-        }
-        rs.foldLeft(Right(Map.empty) :Either[(c.Position,String),Map[String,c.Type]]) {
-          case (a,r) =>
-            for {
-              ac <- a.right
-              m <- r.right
-            } yield ac ++ m
-        }
+        inflaterSymbolsInternal(c)(applySym.paramss.head.map(p => (p.typeSignature, p.name.encoded)), prefix)
+      case Block(_, Function(in, _)) =>
+        inflaterSymbolsInternal(c)(in.map(i => (i.tpt.tpe, i.name.encoded)), prefix)
       case _ => Left((inflater.pos, "ViewTree factory cannot be inspected for typesafety"))
     }
   }

@@ -240,6 +240,7 @@ object AnotherTest extends Activity {
   val r3 = ViewTree.inflateF(this, Nested)(pf)
 
   case class NestedItem(container: FrameLayout, text: TextView, sub2: SimpleRelative) extends ViewTree[FrameLayout] {
+    materializeContext
     text.gravity(Gravity.CENTER)
   }
   case class Nested1(container: LinearLayout, b: Bugger) extends ViewTree[LinearLayout]

@@ -93,6 +93,7 @@ object ViewTree extends ViewTreeBoilerplate.Inflate
     implicit val linearLayoutWeightConstraints: LayoutConstraint[ViewLinearLayoutExtensions,LinearLayout] = null
     implicit val gridLayoutSpecConstraints: LayoutConstraint[ViewGridLayoutExtensions,GridLayout] = null
     implicit val relativeLayoutParamConstraints: LayoutConstraint[ViewRelativeLayoutExtensions,RelativeLayout] = null
+    implicit val standardLayoutParamConstraints: LayoutConstraint[ViewLayoutExtensions,ViewGroup] = null
   }
   /** describes which layout params type can use a contained layout param decorator */
   trait LayoutParamConstraint[A <: ViewGroup.LayoutParams] extends Any

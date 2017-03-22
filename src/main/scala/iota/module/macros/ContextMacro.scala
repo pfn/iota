@@ -33,6 +33,8 @@ private[iota] object ContextMacro {
         Option(Select(This(tpe.typeSymbol), newTermName("context")))
       } else if (tpe <:< c.weakTypeOf[HasActivity]) {
         Option(Select(This(tpe.typeSymbol), newTermName("activity")))
+      } else if (tpe <:< c.weakTypeOf[iota.ViewTree[_]]) {
+        Option(Apply(Select(Select(This(tpe.typeSymbol), newTermName("container")), newTermName("getContext")), Nil))
       } else if (tpe <:< c.weakTypeOf[android.view.View]) {
         Option(Apply(Select(This(tpe.typeSymbol), newTermName("getContext")), Nil))
       } else if (tpe <:< c.weakTypeOf[android.app.Fragment]) {

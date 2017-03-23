@@ -384,6 +384,20 @@ private[iota] object ViewTreeMacro {
     c.asInstanceOf[reflect.macros.runtime.Context].callsiteTyper.context.enclosingContextChain.map(_.tree.asInstanceOf[c.Tree])
   }
 
+  def inBodyRange(c: Context)(pos: c.Position, body: List[c.Tree]): Boolean = {
+    val poss = body.flatMap(b => b :: b.children).map(_.pos)
+    poss.headOption.map(_.source).fold(false)(_ == pos.source) && {
+      (for {
+        (hl,hp) <- poss.headOption.map(p => (p.line, p.point))
+        (ll,lp) <- poss.lastOption.map(p => (p.line, p.point))
+      } yield {
+        (pos.line > hl && pos.line < ll) ||
+        (pos.line == hl && pos.point >= hp) ||
+        (pos.line == ll && pos.point <= lp)
+      }) getOrElse false
+    }
+  }
+
   def findNestLayoutOf(c: Context) = {
     // ASSUMPTION nest will only ever occur inside a ViewTree case class
     // LIMITATION if nest[] occurs outside of case class A extends ViewTree this behaves badly
@@ -392,7 +406,7 @@ private[iota] object ViewTreeMacro {
     val target = c.macroApplication
     val pf: PartialFunction[Tree, Name] = {
       case Apply(Apply(TypeApply(Ident(name), List(Ident(tpe))), List(_*)), body)
-        if name.encoded == "nest" && body.exists(b => b.pos == target.pos || b.children.exists(_.pos == target.pos)) => tpe
+        if name.encoded == "nest" && inBodyRange(c)(target.pos, body) => tpe
     }
     (target.collect(pf) ++ trees.foldLeft(List.empty[c.Name]) { (a, t) =>
       if (a.isEmpty)

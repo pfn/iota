@@ -602,12 +602,19 @@ private[iota] object ViewTreeMacro {
     }
   }
 
-  def lp[A : c.WeakTypeTag](c: Context)(args: c.Expr[Any]*): c.Expr[A] = {
+  def lp[A: c.WeakTypeTag](c: Context)(args: c.Expr[Any]*): c.Expr[A] = {
     import c.universe._
     val view = c.prefix.tree.children.last
-    val lp = makeLp(c, "lp")(args:_*)
+    val lp = c.Expr[ViewGroup.LayoutParams](makeLp(c, "lp")(args:_*))
     val vterm = newTermName(c.fresh("view"))
     val vdef = ValDef(Modifiers(Flag.PARAM), vterm, TypeTree(c.weakTypeOf[A]), view)
-    c.Expr(Block(List(vdef, Apply(Select(view, newTermName("setLayoutParams")), List(lp))), Ident(vterm)))
+    val vsplice = c.Expr[View](Ident(vterm))
+    val setLp = reify {
+      vsplice.splice.setLayoutParams(lp.splice)
+    }.tree
+    c.Expr[A](Block(
+      vdef :: setLp :: Nil,
+      Ident(vterm)
+    ))
   }
 }
